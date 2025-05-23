@@ -1,16 +1,37 @@
 
+"use client";
+
+import React, { useState, useEffect } from 'react'; // Added useState and useEffect
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { mockLearningRoadmap } from "@/lib/mock-data";
+import { mockLearningRoadmap as initialMockRoadmap } from "@/lib/mock-data"; // Renamed for clarity
 import Link from "next/link";
 import { BookOpen, CheckSquare, Square, ExternalLink, PlusCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { Label } from "@/components/ui/label"; // Added import
-import React from 'react'; // Keep React import for key prop
+import { Label } from "@/components/ui/label";
+import type { LearningRoadmap as LearningRoadmapType, RoadmapStep } from '@/types'; // Import types
 
 export default function RoadmapPage() {
-  const roadmap = mockLearningRoadmap;
+  const [roadmap, setRoadmap] = useState<LearningRoadmapType>(initialMockRoadmap);
+  const [progressPercentage, setProgressPercentage] = useState(0);
+  const [completedStepsCount, setCompletedStepsCount] = useState(0);
+
+  useEffect(() => {
+    const completed = roadmap.steps.filter(step => step.isCompleted).length;
+    const total = roadmap.steps.length;
+    setCompletedStepsCount(completed);
+    setProgressPercentage(total > 0 ? (completed / total) * 100 : 0);
+  }, [roadmap]);
+
+  const handleStepToggle = (stepId: string) => {
+    setRoadmap(prevRoadmap => {
+      const newSteps = prevRoadmap.steps.map(step =>
+        step.id === stepId ? { ...step, isCompleted: !step.isCompleted } : step
+      );
+      return { ...prevRoadmap, steps: newSteps };
+    });
+  };
 
   return (
     <div className="container mx-auto py-8 space-y-6">
@@ -30,17 +51,28 @@ export default function RoadmapPage() {
       
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>Roadmap Progress</CardTitle>
-          <CardDescription>Track your journey through the {roadmap.title} roadmap.</CardDescription>
+          <CardTitle>Roadmap Progress ({completedStepsCount}/{roadmap.steps.length})</CardTitle>
+          <CardDescription>
+            Track your journey through the {roadmap.title} roadmap. 
+            Current progress: {Math.round(progressPercentage)}%
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {roadmap.steps.map((step, index) => (
             <React.Fragment key={step.id}>
               <Card className={`p-4 ${step.isCompleted ? 'bg-green-50 border-green-200' : 'bg-secondary/30'}`}>
                 <div className="flex items-start gap-4">
-                  <Checkbox id={`step-${step.id}`} checked={step.isCompleted} className="mt-1 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                  <Checkbox 
+                    id={`step-${step.id}`} 
+                    checked={step.isCompleted} 
+                    onCheckedChange={() => handleStepToggle(step.id)}
+                    className="mt-1 data-[state=checked]:bg-primary data-[state=checked]:border-primary" 
+                  />
                   <div className="flex-1">
-                    <Label htmlFor={`step-${step.id}`} className={`text-lg font-semibold ${step.isCompleted ? 'line-through text-muted-foreground' : ''}`}>
+                    <Label 
+                      htmlFor={`step-${step.id}`} 
+                      className={`text-lg font-semibold cursor-pointer ${step.isCompleted ? 'line-through text-muted-foreground' : ''}`}
+                    >
                       {step.title}
                     </Label>
                     <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
