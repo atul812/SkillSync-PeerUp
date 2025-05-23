@@ -17,9 +17,10 @@ interface RecommendationsDisplayProps {
 }
 
 const getInitials = (name: string) => {
+  if (!name) return "U";
   const names = name.split(' ');
   if (names.length === 1) return names[0][0].toUpperCase();
-  return names[0][0].toUpperCase() + names[names.length - 1][0].toUpperCase();
+  return (names[0][0].toUpperCase() + (names[names.length - 1]?.[0]?.toUpperCase() || "")).slice(0,2);
 };
 
 export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDisplayProps) {
@@ -45,25 +46,26 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
 
     try {
       const result: AISkillMatchOutput = await recommendSkillMatchesFlow(input);
-      // The AI returns names. We need to map this to SkillMatch structure.
-      // For demo, we'll use the AI reasoning and create mock SkillMatch objects.
-      // In a real app, `result.recommendedMatches` would be user IDs to fetch full profiles.
       
       if (result.recommendedMatches && result.recommendedMatches.length > 0) {
-        const formattedMatches: SkillMatch[] = result.recommendedMatches.map((name, index) => ({
-          userId: `ai_match_${index}`,
-          name: name,
-          avatarUrl: `https://placehold.co/80x80.png?text=${getInitials(name)}`, // Placeholder avatar
-          // These would ideally come from comparing profiles, here we simplify
-          commonSkillsToTeach: currentUserProfile.skillsToLearn.filter(skill => Math.random() > 0.5).slice(0,2), // Mocking some skills they teach
-          commonSkillsToLearn: currentUserProfile.skillsToTeach.filter(skill => Math.random() > 0.5).slice(0,2), // Mocking some skills they learn
-          reasoning: index === 0 ? result.reasoning : "This user has complementary skills." // Apply main reasoning to first, generic to others
-        }));
+        const formattedMatches: SkillMatch[] = result.recommendedMatches.map((name, index) => {
+          // Make the mock skill matching more logical
+          const skillsTheyTeachYou = [...currentUserProfile.skillsToLearn].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToLearn.length));
+          const skillsYouTeachThem = [...currentUserProfile.skillsToTeach].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToTeach.length));
+
+          return {
+            userId: `ai_match_${index}_${Date.now()}`, // More unique ID for map keys
+            name: name,
+            avatarUrl: `https://placehold.co/80x80.png?text=${getInitials(name)}`,
+            commonSkillsToTeach: skillsTheyTeachYou, // Skills they have that you want to learn
+            commonSkillsToLearn: skillsYouTeachThem, // Skills you have that they might want to learn (mocked)
+            reasoning: index === 0 ? result.reasoning : `This user has skills that complement yours. ${name} can teach you ${skillsTheyTeachYou.join(', ') || 'some interesting skills'}, and you could teach them ${skillsYouTeachThem.join(', ') || 'some of your skills'}.`
+          };
+        });
         setRecommendations(formattedMatches);
       } else {
-         // If AI returns no matches, use mock data as a fallback for UI demo
-        setRecommendations(mockSkillMatches);
-        setError("AI couldn't find specific matches, showing general examples. Try refining your skills!");
+        setRecommendations(mockSkillMatches); // Fallback to generic mock if AI returns nothing
+        setError("AI couldn't find specific matches right now, showing general examples. Try refining your skills!");
       }
     } catch (e) {
       console.error("Failed to fetch recommendations:", e);
@@ -75,16 +77,14 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
   };
 
   useEffect(() => {
-    // Fetch recommendations when component mounts or profile changes significantly (e.g., skills)
-    // For now, just fetch on mount if skills are present.
     if (currentUserProfile.skillsToLearn.length > 0 || currentUserProfile.skillsToTeach.length > 0) {
       fetchRecommendations();
     } else {
        setError("Add skills to your profile to discover potential matches!");
-       setRecommendations([]); // No mock data if profile is empty
+       setRecommendations([]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUserProfile.skillsToTeach, currentUserProfile.skillsToLearn, currentUserProfile.bio]);
+  }, [currentUserProfile.skillsToTeach.join(','), currentUserProfile.skillsToLearn.join(','), currentUserProfile.bio]); // More specific dependencies
 
 
   return (
@@ -134,14 +134,14 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
                     <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-1">Can Teach You:</h4>
                     <div className="flex flex-wrap gap-2">
                       {match.commonSkillsToTeach.map(skill => <Badge key={skill} variant="secondary" className="bg-green-100 text-green-700 border-green-300">{skill}</Badge>)}
-                      {match.commonSkillsToTeach.length === 0 && <p className="text-xs text-muted-foreground">No direct teaching skill overlap listed for this match.</p>}
+                      {match.commonSkillsToTeach.length === 0 && <p className="text-xs text-muted-foreground">This user might have other skills you'd find useful!</p>}
                     </div>
                   </div>
                   <div>
                     <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-1">Can Learn From You:</h4>
                      <div className="flex flex-wrap gap-2">
                       {match.commonSkillsToLearn.map(skill => <Badge key={skill} variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">{skill}</Badge>)}
-                      {match.commonSkillsToLearn.length === 0 && <p className="text-xs text-muted-foreground">No direct learning skill overlap listed for this match.</p>}
+                      {match.commonSkillsToLearn.length === 0 && <p className="text-xs text-muted-foreground">You might have skills this user could learn!</p>}
                     </div>
                   </div>
                 </CardContent>
