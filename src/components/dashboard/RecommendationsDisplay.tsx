@@ -6,11 +6,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, UserCheck, MessageSquare, RefreshCw, Zap } from "lucide-react";
+import { Loader2, UserCheck, MessageSquare, RefreshCw, Zap, Send, GitFork } from "lucide-react"; // Added GitFork for swap
 import type { AISkillMatchInput, AISkillMatchOutput, UserProfile, SkillMatch } from '@/types';
-import { recommendSkillMatches as recommendSkillMatchesFlow } from '@/ai/flows/skill-match-recommendation'; // Renamed import
+import { recommendSkillMatches as recommendSkillMatchesFlow } from '@/ai/flows/skill-match-recommendation';
 import { Badge } from '@/components/ui/badge';
-import { mockSkillMatches } from '@/lib/mock-data'; // For fallback/initial display
+import { mockSkillMatches } from '@/lib/mock-data';
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
 interface RecommendationsDisplayProps {
   currentUserProfile: UserProfile;
@@ -27,11 +28,12 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
   const [recommendations, setRecommendations] = useState<SkillMatch[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast(); // Initialize useToast
 
   const fetchRecommendations = async () => {
     if (!currentUserProfile.skillsToLearn.length && !currentUserProfile.skillsToTeach.length) {
       setError("Please update your profile with skills to teach and learn to get recommendations.");
-      setRecommendations([]); // Clear existing or mock recommendations
+      setRecommendations([]);
       return;
     }
 
@@ -49,28 +51,27 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
       
       if (result.recommendedMatches && result.recommendedMatches.length > 0) {
         const formattedMatches: SkillMatch[] = result.recommendedMatches.map((name, index) => {
-          // Make the mock skill matching more logical
           const skillsTheyTeachYou = [...currentUserProfile.skillsToLearn].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToLearn.length));
           const skillsYouTeachThem = [...currentUserProfile.skillsToTeach].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToTeach.length));
 
           return {
-            userId: `ai_match_${index}_${Date.now()}`, // More unique ID for map keys
+            userId: `ai_match_${index}_${Date.now()}`,
             name: name,
             avatarUrl: `https://placehold.co/80x80.png?text=${getInitials(name)}`,
-            commonSkillsToTeach: skillsTheyTeachYou, // Skills they have that you want to learn
-            commonSkillsToLearn: skillsYouTeachThem, // Skills you have that they might want to learn (mocked)
+            commonSkillsToTeach: skillsTheyTeachYou,
+            commonSkillsToLearn: skillsYouTeachThem,
             reasoning: index === 0 ? result.reasoning : `This user has skills that complement yours. ${name} can teach you ${skillsTheyTeachYou.join(', ') || 'some interesting skills'}, and you could teach them ${skillsYouTeachThem.join(', ') || 'some of your skills'}.`
           };
         });
         setRecommendations(formattedMatches);
       } else {
-        setRecommendations(mockSkillMatches); // Fallback to generic mock if AI returns nothing
+        setRecommendations(mockSkillMatches); 
         setError("AI couldn't find specific matches right now, showing general examples. Try refining your skills!");
       }
     } catch (e) {
       console.error("Failed to fetch recommendations:", e);
       setError("Could not fetch recommendations at this time. Showing examples.");
-      setRecommendations(mockSkillMatches); // Fallback to mock data on error
+      setRecommendations(mockSkillMatches);
     } finally {
       setIsLoading(false);
     }
@@ -84,8 +85,30 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
        setRecommendations([]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUserProfile.skillsToTeach.join(','), currentUserProfile.skillsToLearn.join(','), currentUserProfile.bio]); // More specific dependencies
+  }, [currentUserProfile.skillsToTeach.join(','), currentUserProfile.skillsToLearn.join(','), currentUserProfile.bio]);
 
+
+  const handleConnect = (matchName: string) => {
+    toast({
+      title: "Connection Requested",
+      description: `Your request to connect with ${matchName} has been sent (mock).`,
+    });
+  };
+
+  const handleRequestSwap = (match: SkillMatch) => {
+    let description = `Skill swap requested with ${match.name} (mock).`;
+    if (match.commonSkillsToLearn.length > 0 && match.commonSkillsToTeach.length > 0) {
+      description = `Skill swap requested with ${match.name}: offering to teach ${match.commonSkillsToLearn[0]} for their ${match.commonSkillsToTeach[0]} (mock).`;
+    } else if (match.commonSkillsToLearn.length > 0) {
+      description = `Skill swap requested with ${match.name}: offering to teach ${match.commonSkillsToLearn[0]} (mock).`;
+    } else if (match.commonSkillsToTeach.length > 0) {
+      description = `Skill swap requested with ${match.name}: interested in learning ${match.commonSkillsToTeach[0]} (mock).`;
+    }
+    toast({
+      title: "Swap Requested",
+      description: description,
+    });
+  };
 
   return (
     <Card className="shadow-lg">
@@ -146,10 +169,11 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
                   </div>
                 </CardContent>
                 <CardFooter className="gap-2">
-                  <Button variant="default" size="sm">
-                    <MessageSquare className="mr-2 h-4 w-4" /> Connect
+                  <Button variant="default" size="sm" onClick={() => handleConnect(match.name)}>
+                    <Send className="mr-2 h-4 w-4" /> Connect {/* Changed Icon */}
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => handleRequestSwap(match)}>
+                    <GitFork className="mr-2 h-4 w-4" /> {/* Changed Icon */}
                     Request Swap
                   </Button>
                 </CardFooter>
