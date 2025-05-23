@@ -57,7 +57,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUpUser = async (email: string, password: string, name: string) => {
     setLoading(true);
-    if (!email || !password || !name) {
+    const normalizedEmail = email.toLowerCase();
+    if (!normalizedEmail || !password || !name) {
       toast({ title: "Sign Up Error", description: "All fields are required.", variant: "destructive" });
       setLoading(false);
       throw new Error("All fields are required.");
@@ -65,21 +66,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
     const newUserProfile: UserProfile = {
-      id: email.toLowerCase(), // Use lowercase email as ID for mock consistency
+      id: normalizedEmail, 
       name,
-      email: email.toLowerCase(), 
+      email: normalizedEmail, 
       bio: `Welcome ${name}! Update your bio to get started.`,
       skillsToTeach: [],
       skillsToLearn: [],
       tokens: 0,
       streak: 0,
       avatarUrl: `https://placehold.co/100x100.png?text=${initials}`,
-      badges: mockBadges.map(b => ({...b, dateEarned: new Date().toISOString().split('T')[0]})), // Ensure fresh dates
+      badges: mockBadges.map(b => ({...b, dateEarned: new Date().toISOString().split('T')[0]})),
       endorsementsReceived: mockEndorsements.map(e => ({...e, dateGiven: new Date().toISOString().split('T')[0]})),
     };
 
     try {
-      // Sign up always overwrites the current mock user in localStorage
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newUserProfile));
       setCurrentUserProfile(newUserProfile);
       toast({ title: "Account Created!", description: `Welcome ${name}! Check out your new badges and profile.` });
@@ -106,8 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
       if (storedUser) {
         const user: UserProfile = JSON.parse(storedUser);
-        // For mock, we check if the stored email/id (which should be lowercase) matches the lowercase input email.
-        // Password check is ignored for this mock system.
         if (user.email === normalizedEmail || user.id === normalizedEmail) {
            setCurrentUserProfile({
             ...user,
@@ -121,13 +119,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           throw new Error("Invalid email or password.");
         }
       } else {
-        // This is where "No user found" is triggered.
         toast({ title: "Sign In Error", description: "No user found. Please sign up.", variant: "destructive" });
         throw new Error("No user found.");
       }
     } catch (error: any) {
       console.error("Error during sign in:", error);
-      // Avoid double-toasting if specific errors were already toasted
       if (!(error instanceof Error && (error.message === "Invalid email or password." || error.message === "No user found." || error.message === "Email and password are required."))) {
         toast({ title: "Sign In Error", description: "An unexpected error occurred.", variant: "destructive" });
       }
@@ -167,7 +163,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newProfile));
       setCurrentUserProfile(newProfile);
-      // toast({ title: "Profile Updated", description: "Your profile has been saved." }); // Toast handled in EditProfileForm
     } catch (error) {
       console.error("Error updating profile in localStorage:", error);
       toast({ title: "Update Error", description: "Could not save profile changes.", variant: "destructive" });
@@ -190,5 +185,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    
