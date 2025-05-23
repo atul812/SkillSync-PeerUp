@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Send, Paperclip, Search } from "lucide-react";
+import { MessageSquare, Send, Paperclip, Search, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext"; 
+import { getBotResponse, type ChatBotInput, type ChatBotOutput } from "@/ai/flows/chat-bot-flow";
 
 // Initial data for contacts
 const contactsInitialData = [
@@ -37,27 +38,27 @@ export default function ChatPage() {
   const [selectedContact, setSelectedContact] = useState(contactsInitialData[0]);
   const [allMessages, setAllMessages] = useState(initialMessagesMapData);
   const [newMessage, setNewMessage] = useState("");
+  const [isBotTyping, setIsBotTyping] = useState(false);
 
   const currentMessages = allMessages[selectedContact.id] || [];
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
 
-  const updateContactLastMessage = (contactId: string, lastMsgText: string) => {
+  const updateContactLastMessage = (contactId: string, lastMsgText: string, incrementUnread = false) => {
     setContactList(prevContacts => 
       prevContacts.map(c => 
-        c.id === contactId ? { ...c, lastMessage: lastMsgText } : c
+        c.id === contactId ? { ...c, lastMessage: lastMsgText, unread: incrementUnread && c.id !== selectedContact?.id ? c.unread + 1 : c.unread } : c
       )
     );
-    // If the selected contact is the one being updated, refresh its state
     if (selectedContact?.id === contactId) {
       setSelectedContact(prevSelected => {
-        const updated = contactList.find(c => c.id === contactId);
-        return updated || prevSelected; // Fallback to previous if somehow not found
+        const updated = contactList.find(c => c.id === contactId); // find from the latest contactList
+        return updated ? { ...updated, lastMessage: lastMsgText } : prevSelected; 
       });
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !currentUserProfile) return;
 
     const messageToSend = {
@@ -68,42 +69,71 @@ export default function ChatPage() {
       self: true,
     };
 
-    console.log("Sending message:", messageToSend, "to contact:", selectedContact.id); 
-
-    // Add user's message to the chat
+    // Add user's message to the chat for the selected contact
     setAllMessages(prevAllMessages => ({
         ...prevAllMessages,
         [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), messageToSend]
     }));
 
-    // Update last message for the contact
     updateContactLastMessage(selectedContact.id, messageToSend.text);
+    const currentInput = newMessage.trim();
+    setNewMessage("");
     
-    // If message is to AI Bot, simulate a reply
     if (selectedContact.id === "user_ai_helper") {
-      setTimeout(() => {
+      setIsBotTyping(true);
+      try {
+        const botInput: ChatBotInput = { userInput: currentInput };
+        const aiResponse: ChatBotOutput = await getBotResponse(botInput);
+        
         const botReply = {
           id: `bot-reply-${Date.now()}`,
           sender: "SkillSync & PeerUp AI Bot",
-          text: "Thanks for your message! I'm a mock AI assistant, learning to help with skill matching. How can I (theoretically) assist you?",
+          text: aiResponse.botResponse,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          self: false,
+        };
+
+        setAllMessages(prevAllMessages => ({
+          ...prevAllMessages,
+          [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), botReply]
+        }));
+        updateContactLastMessage(selectedContact.id, botReply.text, true);
+
+      } catch (error) {
+        console.error("Error getting AI response:", error);
+        const errorReply = {
+          id: `bot-error-${Date.now()}`,
+          sender: "SkillSync & PeerUp AI Bot",
+          text: "Sorry, I'm having trouble connecting to my brain right now. Please try again later.",
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           self: false,
         };
         setAllMessages(prevAllMessages => ({
           ...prevAllMessages,
-          [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), botReply]
+          [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), errorReply]
         }));
-        // Update bot's last message to its reply
-        updateContactLastMessage(selectedContact.id, botReply.text);
-      }, 1500);
+        updateContactLastMessage(selectedContact.id, errorReply.text, true);
+      } finally {
+        setIsBotTyping(false);
+      }
     }
-    
-    setNewMessage("");
   };
 
   const handleContactSelect = (contact: typeof contactsInitialData[0]) => {
-    setSelectedContact(contact);
+    setSelectedContact(prevSelected => {
+      if (prevSelected?.id === contact.id) return prevSelected; // No change if same contact
+      // Reset unread count for the newly selected contact
+      setContactList(prevList => prevList.map(c => c.id === contact.id ? {...c, unread: 0} : c));
+      return contact;
+    });
   };
+
+  useEffect(() => {
+    // If selected contact changes, update its state in contactList to mark unread as 0
+    if (selectedContact) {
+       setContactList(prevList => prevList.map(c => c.id === selectedContact.id ? {...c, unread: 0} : c));
+    }
+  }, [selectedContact?.id]);
 
 
   return (
@@ -131,9 +161,9 @@ export default function ChatPage() {
               </Avatar>
               <div className="flex-1 overflow-hidden">
                 <p className="font-medium truncate">{contact.name}</p>
-                <p className={`text-xs truncate ${contact.unread > 0 ? 'font-bold text-primary' : 'text-muted-foreground'}`}>{contact.lastMessage}</p>
+                <p className={`text-xs truncate ${contact.unread > 0 && contact.id !== selectedContact?.id ? 'font-bold text-primary' : 'text-muted-foreground'}`}>{contact.lastMessage}</p>
               </div>
-              {contact.unread > 0 && (
+              {contact.unread > 0 && contact.id !== selectedContact?.id && (
                 <span className="text-xs bg-primary text-primary-foreground rounded-full px-2 py-0.5">{contact.unread}</span>
               )}
             </div>
@@ -159,11 +189,21 @@ export default function ChatPage() {
               {currentMessages.map(msg => (
                 <div key={msg.id} className={`flex ${msg.self ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-xs lg:max-w-md p-3 rounded-lg ${msg.self ? 'bg-primary text-primary-foreground' : 'bg-card text-card-foreground shadow-sm'}`}>
-                    <p className="text-sm">{msg.text}</p>
+                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                     <p className={`text-xs mt-1 ${msg.self ? 'text-primary-foreground/70' : 'text-muted-foreground'} text-right`}>{msg.time}</p>
                   </div>
                 </div>
               ))}
+               {isBotTyping && selectedContact.id === "user_ai_helper" && (
+                <div className="flex justify-start">
+                  <div className="max-w-xs lg:max-w-md p-3 rounded-lg bg-card text-card-foreground shadow-sm">
+                    <div className="flex items-center">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <p className="text-sm italic">AI Bot is typing...</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="p-4 border-t bg-background">
               <div className="flex items-center gap-2">
@@ -179,15 +219,12 @@ export default function ChatPage() {
                       handleSendMessage();
                     }
                   }}
-                  disabled={!currentUserProfile} 
+                  disabled={!currentUserProfile || isBotTyping} 
                 />
-                <Button onClick={handleSendMessage} disabled={!newMessage.trim() || !currentUserProfile}>
+                <Button onClick={handleSendMessage} disabled={!newMessage.trim() || !currentUserProfile || isBotTyping}>
                   <Send className="h-5 w-5" /> Send
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                Chat is client-side only for prototype purposes. Messages are not saved.
-              </p>
             </div>
           </>
         ) : (
