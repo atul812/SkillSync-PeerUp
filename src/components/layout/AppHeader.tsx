@@ -60,7 +60,7 @@ export function AppHeader({ userName, avatarUrl, tokens, streak, onSignOut }: Ap
       )}
       <div className="flex-1">
         <Link href="/dashboard" className="flex items-center gap-2">
-           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 text-accent">
+           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-accent mr-2">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2.5-8.5L12 14l2.5-2.5L17 14l-5-5-5 5z"/>
           </svg>
           <span className="text-xl font-semibold text-foreground">SkillSync & PeerUp</span>
