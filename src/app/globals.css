@@ -5,56 +5,56 @@
 
 @layer base {
   :root {
-    /* White, Gold, Red Theme */
-    --background: 0 0% 100%; /* White */
-    --foreground: 220 10% 25%; /* Dark Grey/Slate for text */
+    /* Dark Slate Blue/Grey, Gold, Red Theme */
+    --background: 220 10% 20%; /* Dark Slate Blue/Grey */
+    --foreground: 0 0% 90%; /* Light Grey/Off-white for text */
 
-    --card: 0 0% 98%; /* Off-white for cards */
-    --card-foreground: 220 10% 20%; /* Darker Grey/Slate for card text */
+    --card: 220 10% 15%; /* Slightly darker Slate for cards */
+    --card-foreground: 0 0% 90%; /* Light Grey/Off-white for card text */
 
-    --popover: 0 0% 97%; /* Slightly different off-white for popovers */
-    --popover-foreground: 220 10% 15%; /* Darkest Grey/Slate for popover text */
+    --popover: 220 10% 12%; /* Even darker Slate for popovers */
+    --popover-foreground: 0 0% 90%; /* Light Grey/Off-white for popover text */
 
-    --primary: 40 90% 50%; /* Gold */
-    --primary-foreground: 30 50% 10%; /* Dark Brown/Black for text on gold */
+    --primary: 45 100% 50%; /* Vibrant Gold */
+    --primary-foreground: 30 50% 15%; /* Dark Brown/Black for text on gold */
 
-    --secondary: 0 75% 50%; /* Red */
+    --secondary: 0 70% 45%; /* Deep Red */
     --secondary-foreground: 0 0% 100%; /* White text on red */
 
-    --muted: 0 0% 92%; /* Lighter Grey for muted elements */
-    --muted-foreground: 220 10% 45%; /* Muted Greyish text */
+    --muted: 220 10% 35%; /* Muted Slate for less emphasis */
+    --muted-foreground: 220 10% 70%; /* Lighter muted text */
 
-    --accent: 0 85% 55%; /* Bright Red for accents */
+    --accent: 0 85% 55%; /* Bright Red for accents (can be same as secondary or distinct) */
     --accent-foreground: 0 0% 100%; /* White text on bright red */
 
-    --destructive: 0 75% 50%; /* Standard Red for destructive */
+    --destructive: 0 100% 50%; /* Standard Red for destructive actions */
     --destructive-foreground: 0 0% 100%; /* White text on destructive red */
 
-    --border: 0 0% 88%; /* Light grey for borders */
-    --input: 0 0% 88%; /* Light grey for input borders, background remains white via component styles */
-    --ring: 40 90% 55%; /* Brighter Gold for focus rings */
+    --border: 220 10% 30%; /* Slate border */
+    --input: 220 10% 30%; /* Slate input border */
+    --ring: 45 100% 55%; /* Brighter Gold for focus rings */
     
-    --chart-1: 40 90% 50%; /* Gold */
-    --chart-2: 0 75% 50%;   /* Red */
+    --chart-1: 45 100% 50%; /* Gold */
+    --chart-2: 0 80% 50%;   /* Red */
     --chart-3: 40 80% 60%;   /* Lighter Gold */
     --chart-4: 0 70% 40%;   /* Darker Red */
-    --chart-5: 45 70% 55%;   /* Orange-Gold */
+    --chart-5: 50 70% 55%;   /* Orange-Gold */
 
     --radius: 0.5rem;
 
-    /* Sidebar specific theme variables */
-    --sidebar-background: 0 0% 96%; /* Very Light Grey for sidebar */
-    --sidebar-foreground: 220 10% 20%; /* Dark Grey/Slate text */
-    --sidebar-primary: 40 90% 50%; /* Gold */
-    --sidebar-primary-foreground: 30 50% 10%; /* Dark Brown text on gold */
-    --sidebar-accent: 0 75% 50%; /* Red */
+    /* Sidebar specific theme variables - consistent with main dark theme */
+    --sidebar-background: 220 10% 17%; /* Darker Slate for sidebar */
+    --sidebar-foreground: 0 0% 85%; /* Light text for sidebar */
+    --sidebar-primary: 45 100% 50%; /* Gold */
+    --sidebar-primary-foreground: 30 50% 15%; /* Dark Brown text on gold */
+    --sidebar-accent: 0 80% 50%; /* Red */
     --sidebar-accent-foreground: 0 0% 100%; /* White text on red */
-    --sidebar-border: 0 0% 85%; /* Slightly darker grey border for sidebar */
-    --sidebar-ring: 40 90% 55%; /* Gold for focus rings in sidebar */
+    --sidebar-border: 220 10% 25%; /* Slightly darker slate border for sidebar */
+    --sidebar-ring: 45 100% 55%; /* Gold for focus rings in sidebar */
   }
 
   .dark {
-    /* Consistent dark theme based on user's previous preference (Gold, Red, Dark Slate Blue/Grey) */
+    /* Keeping .dark consistent with the new default, can be differentiated later if needed */
     --background: 220 10% 20%; 
     --foreground: 0 0% 90%; 
 
@@ -108,3 +108,4 @@
     @apply bg-background text-foreground;
   }
 }
+
