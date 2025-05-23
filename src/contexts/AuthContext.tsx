@@ -48,13 +48,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error("All fields are required.");
     }
 
-    // Mock: Check if email already exists (in a real app, check DB)
-    const existingUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-    if (existingUser && JSON.parse(existingUser).email === email) {
-        toast({ title: "Sign Up Error", description: "Email already in use.", variant: "destructive" });
-        setLoading(false);
-        throw new Error("Email already in use.");
-    }
+    // Removed the check for existing email to allow overwriting the mock user
+    // const existingUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+    // if (existingUser && JSON.parse(existingUser).email === email) {
+    //     toast({ title: "Sign Up Error", description: "Email already in use.", variant: "destructive" });
+    //     setLoading(false);
+    //     throw new Error("Email already in use.");
+    // }
     
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
     const newUserProfile: UserProfile = {
@@ -93,11 +93,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
       if (storedUser) {
-        const user: UserProfile & { email?: string } = JSON.parse(storedUser);
+        const user: UserProfile = JSON.parse(storedUser);
         // Mock check: In a real app, you'd verify the password against a hash.
         // Here, we just check if the email matches the one stored during a mock signup.
         if (user.email === email || user.id === email) { // Allow sign in with id (which is email) or actual email field
-          setCurrentUserProfile(user as UserProfile);
+          setCurrentUserProfile(user);
           toast({ title: "Signed In", description: `Welcome back, ${user.name}!` });
           router.push('/dashboard');
         } else {
