@@ -8,46 +8,61 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Send, Paperclip, Search } from "lucide-react";
 import Image from "next/image";
-import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
+import { useAuth } from "@/contexts/AuthContext"; 
 
-// Mock data for chat interface - contacts can remain mock for now
-const contacts = [
+// Initial data for contacts
+const contactsInitialData = [
   { id: "user_jane_doe", name: "Jane Doe", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "Sure, I can help with that!", unread: 2, online: true },
   { id: "user_john_smith", name: "John Smith", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "Thanks for the session!", unread: 0, online: false },
   { id: "user_ai_helper", name: "SkillSync & PeerUp AI Bot", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "How can I assist you today?", unread: 0, online: true },
 ];
-const selectedContactInitial = contacts[0]; 
 
-// Initial messages are specific to the initially selected contact (Jane Doe & Alex Johnson - Alex is a mock contact here)
+// Initial messages are specific to the initially selected contact
 const initialMessagesForJane = [
   { id: "msg1", sender: "Jane Doe", text: "Hey Alex! I saw you're looking to learn Data Structures. I can help with that.", time: "10:30 AM", self: false },
-  { id: "msg2", sender: "Alex Johnson (Mock User)", text: "Hi Jane! That would be amazing. I'm particularly struggling with graphs.", time: "10:32 AM", self: true }, // Clarified Alex is mock here
+  { id: "msg2", sender: "Alex Johnson (Mock User)", text: "Hi Jane! That would be amazing. I'm particularly struggling with graphs.", time: "10:32 AM", self: true }, 
   { id: "msg3", sender: "Jane Doe", text: "No problem! Graphs can be tricky. When are you free for a quick session?", time: "10:33 AM", self: false },
 ];
 
-const initialMessagesMap: Record<string, Array<{id: string; sender: string; text: string; time: string; self: boolean}>> = {
-    [contacts[0].id]: initialMessagesForJane, 
-    [contacts[1].id]: [], 
-    [contacts[2].id]: [ { id: "bot-msg1", sender: "SkillSync & PeerUp AI Bot", text: "Hello! How can I help you match skills today? (I'm not interactive yet!)", time: "9:00 AM", self: false }],
+const initialMessagesMapData: Record<string, Array<{id: string; sender: string; text: string; time: string; self: boolean}>> = {
+    [contactsInitialData[0].id]: initialMessagesForJane, 
+    [contactsInitialData[1].id]: [], 
+    [contactsInitialData[2].id]: [ { id: "bot-msg1", sender: "SkillSync & PeerUp AI Bot", text: "Hello! How can I help you match skills today?", time: "9:00 AM", self: false }],
 };
 
 
 export default function ChatPage() {
-  const { currentUserProfile } = useAuth(); // Get current user
-  const [selectedContact, setSelectedContact] = useState(selectedContactInitial);
-  const [allMessages, setAllMessages] = useState(initialMessagesMap);
+  const { currentUserProfile } = useAuth(); 
+  const [contactList, setContactList] = useState(contactsInitialData);
+  const [selectedContact, setSelectedContact] = useState(contactsInitialData[0]);
+  const [allMessages, setAllMessages] = useState(initialMessagesMapData);
   const [newMessage, setNewMessage] = useState("");
 
   const currentMessages = allMessages[selectedContact.id] || [];
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
 
+  const updateContactLastMessage = (contactId: string, lastMsgText: string) => {
+    setContactList(prevContacts => 
+      prevContacts.map(c => 
+        c.id === contactId ? { ...c, lastMessage: lastMsgText } : c
+      )
+    );
+    // If the selected contact is the one being updated, refresh its state
+    if (selectedContact?.id === contactId) {
+      setSelectedContact(prevSelected => {
+        const updated = contactList.find(c => c.id === contactId);
+        return updated || prevSelected; // Fallback to previous if somehow not found
+      });
+    }
+  };
+
   const handleSendMessage = () => {
     if (newMessage.trim() === "" || !currentUserProfile) return;
 
     const messageToSend = {
       id: `msg${currentMessages.length + 1}-${Date.now()}`,
-      sender: currentUserProfile.name, // Use logged-in user's name
+      sender: currentUserProfile.name, 
       text: newMessage.trim(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       self: true,
@@ -55,14 +70,38 @@ export default function ChatPage() {
 
     console.log("Sending message:", messageToSend, "to contact:", selectedContact.id); 
 
+    // Add user's message to the chat
     setAllMessages(prevAllMessages => ({
         ...prevAllMessages,
         [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), messageToSend]
     }));
+
+    // Update last message for the contact
+    updateContactLastMessage(selectedContact.id, messageToSend.text);
+    
+    // If message is to AI Bot, simulate a reply
+    if (selectedContact.id === "user_ai_helper") {
+      setTimeout(() => {
+        const botReply = {
+          id: `bot-reply-${Date.now()}`,
+          sender: "SkillSync & PeerUp AI Bot",
+          text: "Thanks for your message! I'm a mock AI assistant, learning to help with skill matching. How can I (theoretically) assist you?",
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          self: false,
+        };
+        setAllMessages(prevAllMessages => ({
+          ...prevAllMessages,
+          [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), botReply]
+        }));
+        // Update bot's last message to its reply
+        updateContactLastMessage(selectedContact.id, botReply.text);
+      }, 1500);
+    }
+    
     setNewMessage("");
   };
 
-  const handleContactSelect = (contact: typeof contacts[0]) => {
+  const handleContactSelect = (contact: typeof contactsInitialData[0]) => {
     setSelectedContact(contact);
   };
 
@@ -79,7 +118,7 @@ export default function ChatPage() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {contacts.map(contact => (
+          {contactList.map(contact => (
             <div
               key={contact.id}
               className={`p-3 flex items-center gap-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer ${contact.id === selectedContact?.id ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''}`}
@@ -140,14 +179,14 @@ export default function ChatPage() {
                       handleSendMessage();
                     }
                   }}
-                  disabled={!currentUserProfile} // Disable if no user logged in
+                  disabled={!currentUserProfile} 
                 />
                 <Button onClick={handleSendMessage} disabled={!newMessage.trim() || !currentUserProfile}>
                   <Send className="h-5 w-5" /> Send
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                Chat is client-side only. Messages are not saved. AI Bot does not reply.
+                Chat is client-side only for prototype purposes. Messages are not saved.
               </p>
             </div>
           </>
