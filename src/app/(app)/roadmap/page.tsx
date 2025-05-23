@@ -1,21 +1,23 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react'; // Added useState and useEffect
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { mockLearningRoadmap as initialMockRoadmap } from "@/lib/mock-data"; // Renamed for clarity
+import { mockLearningRoadmap as initialMockRoadmap } from "@/lib/mock-data";
 import Link from "next/link";
-import { BookOpen, CheckSquare, Square, ExternalLink, PlusCircle } from "lucide-react";
+import { BookOpen, CheckSquare, Square, ExternalLink, PlusCircle, RefreshCcw, ListChecks } from "lucide-react"; // Added RefreshCcw, ListChecks
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import type { LearningRoadmap as LearningRoadmapType, RoadmapStep } from '@/types'; // Import types
+import type { LearningRoadmap as LearningRoadmapType, RoadmapStep } from '@/types';
+import { useToast } from "@/hooks/use-toast"; // Added useToast
 
 export default function RoadmapPage() {
   const [roadmap, setRoadmap] = useState<LearningRoadmapType>(initialMockRoadmap);
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [completedStepsCount, setCompletedStepsCount] = useState(0);
+  const { toast } = useToast(); // Initialize toast
 
   useEffect(() => {
     const completed = roadmap.steps.filter(step => step.isCompleted).length;
@@ -33,6 +35,29 @@ export default function RoadmapPage() {
     });
   };
 
+  const handleResetRoadmap = () => {
+    setRoadmap(prevRoadmap => {
+      const resetSteps = prevRoadmap.steps.map(step => ({ ...step, isCompleted: false }));
+      return { ...prevRoadmap, steps: resetSteps };
+    });
+    toast({
+      title: "Roadmap Reset",
+      description: `The "${roadmap.title}" roadmap has been reset to its initial state.`,
+    });
+  };
+
+  const handleMarkAllComplete = () => {
+    setRoadmap(prevRoadmap => {
+      const completedSteps = prevRoadmap.steps.map(step => ({ ...step, isCompleted: true }));
+      return { ...prevRoadmap, steps: completedSteps };
+    });
+    toast({
+      title: "All Steps Completed!",
+      description: `All steps in the "${roadmap.title}" roadmap have been marked as complete.`,
+      variant: "default", 
+    });
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex justify-between items-center">
@@ -43,9 +68,9 @@ export default function RoadmapPage() {
             </h1>
             <p className="text-muted-foreground mt-1">{roadmap.description}</p>
         </div>
-        <Button variant="outline" disabled>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create New Roadmap
+        <Button variant="outline" onClick={handleResetRoadmap}>
+            <RefreshCcw className="mr-2 h-4 w-4" /> 
+            Reset Current Roadmap (Mock)
         </Button>
       </div>
       
@@ -103,7 +128,10 @@ export default function RoadmapPage() {
           ))}
         </CardContent>
         <CardFooter>
-            <Button disabled>Mark All as Complete (Feature Coming Soon)</Button>
+            <Button onClick={handleMarkAllComplete}>
+              <ListChecks className="mr-2 h-4 w-4" />
+              Mark All as Complete
+            </Button>
         </CardFooter>
       </Card>
     </div>
