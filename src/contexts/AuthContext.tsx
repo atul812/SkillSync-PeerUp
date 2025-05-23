@@ -2,17 +2,28 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import type { UserProfile } from '@/types';
+import type { UserProfile, Badge, Endorsement } from '@/types'; // Added Badge and Endorsement
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
-const LOCAL_STORAGE_USER_KEY = 'skillSyncPeerUpUserProfile'; // Updated key
+const LOCAL_STORAGE_USER_KEY = 'skillSyncPeerUpUserProfile';
+
+// Mock data for new users
+const mockBadges: Badge[] = [
+  { id: "badge1", name: "Welcome Aboard!", iconName: "Ship", description: "Joined SkillSync & PeerUp.", dateEarned: "2024-07-01" },
+  { id: "badge2", name: "Profile Pioneer", iconName: "UserCheck", description: "Completed your first profile update.", dateEarned: "2024-07-02" },
+];
+
+const mockEndorsements: Endorsement[] = [
+  { id: "endorse1", fromUserName: "AI Helper", skill: "Enthusiasm", comment: "Great enthusiasm for learning!", dateGiven: "2024-07-03", fromUserAvatar: "https://placehold.co/40x40.png" },
+];
+
 
 interface AuthContextType {
   currentUserProfile: UserProfile | null;
   loading: boolean;
-  signUpUser: (email: string, password: string, name: string) => Promise<void>; // Password is not really used for check
-  signInUser: (email: string, password: string) => Promise<void>; // Password is not really used for check
+  signUpUser: (email: string, password: string, name: string) => Promise<void>;
+  signInUser: (email: string, password: string) => Promise<void>;
   signOutUser: () => Promise<void>;
   updateCurrentUserProfile: (updatedProfileData: Partial<UserProfile>) => Promise<void>;
 }
@@ -30,49 +41,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
       if (storedUser) {
-        setCurrentUserProfile(JSON.parse(storedUser));
+        const user: UserProfile = JSON.parse(storedUser);
+        // Ensure badges and endorsements are arrays if they don't exist from older stored profiles
+        setCurrentUserProfile({
+          ...user,
+          badges: user.badges || [],
+          endorsementsReceived: user.endorsementsReceived || [],
+        });
       }
     } catch (error) {
       console.error("Error loading user from localStorage:", error);
-      localStorage.removeItem(LOCAL_STORAGE_USER_KEY); // Clear corrupted data
+      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
     }
     setLoading(false);
   }, []);
 
   const signUpUser = async (email: string, password: string, name: string) => {
     setLoading(true);
-    // Basic validation (in a real app, do more)
     if (!email || !password || !name) {
       toast({ title: "Sign Up Error", description: "All fields are required.", variant: "destructive" });
       setLoading(false);
       throw new Error("All fields are required.");
     }
-
-    // Removed the check for existing email to allow overwriting the mock user
-    // const existingUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-    // if (existingUser && JSON.parse(existingUser).email === email) {
-    //     toast({ title: "Sign Up Error", description: "Email already in use.", variant: "destructive" });
-    //     setLoading(false);
-    //     throw new Error("Email already in use.");
-    // }
     
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
     const newUserProfile: UserProfile = {
-      id: email, // Using email as ID for simplicity in mock
+      id: email, 
       name,
-      email, // Storing email for mock sign-in check
+      email, 
       bio: `Welcome ${name}! Update your bio to get started.`,
       skillsToTeach: [],
       skillsToLearn: [],
       tokens: 0,
       streak: 0,
       avatarUrl: `https://placehold.co/100x100.png?text=${initials}`,
+      badges: mockBadges, // Add mock badges for new user
+      endorsementsReceived: mockEndorsements, // Add mock endorsements
     };
 
     try {
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newUserProfile));
       setCurrentUserProfile(newUserProfile);
-      toast({ title: "Account Created!", description: `Welcome ${name}! Please complete your profile.` });
+      toast({ title: "Account Created!", description: `Welcome ${name}! Check out your new badges and profile.` });
       router.push('/profile');
     } catch (error) {
       console.error("Error saving user to localStorage during signup:", error);
@@ -94,10 +104,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
       if (storedUser) {
         const user: UserProfile = JSON.parse(storedUser);
-        // Mock check: In a real app, you'd verify the password against a hash.
-        // Here, we just check if the email matches the one stored during a mock signup.
-        if (user.email === email || user.id === email) { // Allow sign in with id (which is email) or actual email field
-          setCurrentUserProfile(user);
+        if (user.email === email || user.id === email) {
+           setCurrentUserProfile({ // Ensure badges/endorsements are arrays on sign-in too
+            ...user,
+            badges: user.badges || [],
+            endorsementsReceived: user.endorsementsReceived || [],
+          });
           toast({ title: "Signed In", description: `Welcome back, ${user.name}!` });
           router.push('/dashboard');
         } else {
@@ -108,9 +120,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast({ title: "Sign In Error", description: "No user found. Please sign up.", variant: "destructive" });
         throw new Error("No user found.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during sign in:", error);
-      // Toast is handled above or if error is not one of ours
       if (!(error instanceof Error && (error.message === "Invalid email or password." || error.message === "No user found."))) {
         toast({ title: "Sign In Error", description: "An unexpected error occurred.", variant: "destructive" });
       }
@@ -142,10 +153,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(true);
     try {
-      const newProfile = { ...currentUserProfile, ...updatedProfileData };
+      const newProfile = { 
+        ...currentUserProfile, 
+        ...updatedProfileData,
+        // Ensure badges and endorsements persist or are initialized if partial update doesn't include them
+        badges: updatedProfileData.badges || currentUserProfile.badges || [],
+        endorsementsReceived: updatedProfileData.endorsementsReceived || currentUserProfile.endorsementsReceived || [],
+      };
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newProfile));
       setCurrentUserProfile(newProfile);
-      // toast({ title: "Profile Updated", description: "Your profile has been saved locally." });
     } catch (error) {
       console.error("Error updating profile in localStorage:", error);
       toast({ title: "Update Error", description: "Could not save profile changes.", variant: "destructive" });

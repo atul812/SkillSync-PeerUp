@@ -1,4 +1,21 @@
 
+export interface Badge {
+  id: string;
+  name: string;
+  iconName: string; // We'll map this to a Lucide icon component
+  description: string;
+  dateEarned: string;
+}
+
+export interface Endorsement {
+  id: string;
+  fromUserName: string;
+  fromUserAvatar?: string;
+  skill: string;
+  comment: string;
+  dateGiven: string;
+}
+
 export interface UserProfile {
   id: string; // For mock, this might be the email
   name: string;
@@ -10,6 +27,8 @@ export interface UserProfile {
   tokens: number;
   streak: number;
   personalNotes?: Record<string, string>; // skill -> note
+  badges?: Badge[];
+  endorsementsReceived?: Endorsement[];
 }
 
 export interface SkillMatch {
