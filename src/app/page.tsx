@@ -24,14 +24,14 @@ export default function LandingPage() {
     if (loading) {
       return <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Please wait...</>;
     }
-    return <>Join SkillSwap Today <Zap className="ml-2 h-5 w-5" /></>;
+    return <>Join SkillSync & PeerUp Today <Zap className="ml-2 h-5 w-5" /></>;
   };
 
   const SignUpButtonContent = () => {
      if (loading) {
       return <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading...</>;
     }
-    return "Sign Up & Start Swapping";
+    return "Sign Up & Start Swapping"; // This button text seems generic enough, or can be changed too if preferred.
   }
 
 
@@ -39,7 +39,7 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen">
       <header className="bg-primary text-primary-foreground py-6 shadow-md">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link href="/" className="text-3xl font-bold">SkillSwap</Link>
+          <Link href="/" className="text-3xl font-bold">SkillSync & PeerUp</Link>
           <nav>
             <Link href={getStartedLink} passHref>
               <Button variant="secondary" disabled={loading}>
@@ -57,7 +57,7 @@ export default function LandingPage() {
               Unlock Your Potential. Share Your Skills.
             </h2>
             <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
-              SkillSwap is a peer-to-peer learning platform where you can teach what you know and learn what you need, all within a supportive and gamified environment.
+              SkillSync & PeerUp is a peer-to-peer learning platform where you can teach what you know and learn what you need, all within a supportive and gamified environment.
             </p>
             <Link href={getStartedLink} passHref>
               <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={loading}>
@@ -70,7 +70,7 @@ export default function LandingPage() {
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
             <h3 className="text-3xl font-bold text-center mb-12 text-foreground">
-              Why SkillSwap?
+              Why SkillSync & PeerUp?
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               <FeatureCard
@@ -143,7 +143,7 @@ export default function LandingPage() {
 
       <footer className="bg-foreground text-background py-8 text-center">
         <div className="container mx-auto px-4">
-          <p>&copy; {new Date().getFullYear()} SkillSwap. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} SkillSync & PeerUp. All rights reserved.</p>
           <p className="text-sm text-muted-foreground">Empowering students through shared knowledge.</p>
         </div>
       </footer>

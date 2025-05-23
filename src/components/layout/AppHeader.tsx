@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Flame, Coins, Menu, LogOut, UserCircle, Settings, BarChart3, Loader2 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar"; 
-import { useAuth } from "@/contexts/AuthContext"; // Import useAuth if needed for signout, or pass as prop
-import { useState } from "react"; // For signout loading state
+import { useAuth } from "@/contexts/AuthContext"; 
+import { useState } from "react"; 
 
 interface AppHeaderProps {
   userName: string;
@@ -63,7 +63,7 @@ export function AppHeader({ userName, avatarUrl, tokens, streak, onSignOut }: Ap
            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 text-primary">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2.5-8.5L12 14l2.5-2.5L17 14l-5-5-5 5z"/>
           </svg>
-          <span className="text-xl font-semibold text-foreground">SkillSwap</span>
+          <span className="text-xl font-semibold text-foreground">SkillSync & PeerUp</span>
         </Link>
       </div>
       

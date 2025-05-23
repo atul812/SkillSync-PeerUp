@@ -6,7 +6,7 @@ import type { UserProfile } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
-const LOCAL_STORAGE_USER_KEY = 'skillSwapUserProfile';
+const LOCAL_STORAGE_USER_KEY = 'skillSyncPeerUpUserProfile'; // Updated key
 
 interface AuthContextType {
   currentUserProfile: UserProfile | null;

@@ -1,4 +1,5 @@
-# Firebase Studio
+
+# SkillSync & PeerUp
 
 This is a NextJS starter in Firebase Studio.
 
