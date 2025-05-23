@@ -17,16 +17,30 @@ const contacts = [
 ];
 const selectedContactInitial = contacts[0]; // Assuming the first contact is selected
 
-const initialMessages = [
+// Initial messages are specific to the initially selected contact (Jane Doe & Alex Johnson)
+const initialMessagesForJane = [
   { id: "msg1", sender: "Jane Doe", text: "Hey Alex! I saw you're looking to learn Data Structures. I can help with that.", time: "10:30 AM", self: false },
   { id: "msg2", sender: "Alex Johnson", text: "Hi Jane! That would be amazing. I'm particularly struggling with graphs.", time: "10:32 AM", self: true },
   { id: "msg3", sender: "Jane Doe", text: "No problem! Graphs can be tricky. When are you free for a quick session?", time: "10:33 AM", self: false },
 ];
 
+// For other contacts, start with an empty message list or specific initial messages if desired.
+// For simplicity, we'll start them empty and let the user populate client-side.
+const initialMessagesMap: Record<string, Array<{id: string; sender: string; text: string; time: string; self: boolean}>> = {
+    [contacts[0].id]: initialMessagesForJane, // Jane Doe
+    [contacts[1].id]: [], // John Smith - starts empty
+    [contacts[2].id]: [], // SkillSwap AI Bot - starts empty, maybe a welcome message?
+};
+
+
 export default function ChatPage() {
-  const [selectedContact, setSelectedContact] = useState(selectedContactInitial); // State for selected contact
-  const [messages, setMessages] = useState(initialMessages); // State for messages
-  const [newMessage, setNewMessage] = useState(""); // State for the input field
+  const [selectedContact, setSelectedContact] = useState(selectedContactInitial);
+  // Use a state that holds messages for all contacts
+  const [allMessages, setAllMessages] = useState(initialMessagesMap);
+  const [newMessage, setNewMessage] = useState("");
+
+  // Get messages for the currently selected contact
+  const currentMessages = allMessages[selectedContact.id] || [];
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
 
@@ -34,26 +48,26 @@ export default function ChatPage() {
     if (newMessage.trim() === "") return;
 
     const messageToSend = {
-      id: `msg${messages.length + 1}-${Date.now()}`,
-      // Assuming "Alex Johnson" is the current user based on initial mock data context
-      sender: "Alex Johnson", 
+      id: `msg${currentMessages.length + 1}-${Date.now()}`,
+      sender: "Alex Johnson", // Hardcoded current user
       text: newMessage.trim(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       self: true,
     };
-    setMessages(prevMessages => [...prevMessages, messageToSend]);
+
+    console.log("Sending message:", messageToSend, "to contact:", selectedContact.id); // Debug log
+
+    setAllMessages(prevAllMessages => ({
+        ...prevAllMessages,
+        [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), messageToSend]
+    }));
     setNewMessage("");
   };
 
   const handleContactSelect = (contact: typeof contacts[0]) => {
     setSelectedContact(contact);
-    // Here you might want to load messages for the selected contact in a real app
-    // For now, we'll just stick to the initial messages or clear them.
-    // Let's clear messages for simplicity to show a change, or you could load contact-specific messages.
-    setMessages(initialMessages.filter(m => 
-        (m.sender === contact.name || m.sender === "Alex Johnson") && 
-        (contact.name !== "SkillSwap AI Bot" || m.sender === "SkillSwap AI Bot" || m.sender === "Alex Johnson")
-    )); 
+    // The currentMessages will automatically update based on selectedContact.id from allMessages
+    // No need to explicitly set messages here unless you want to re-fetch or reset.
   };
 
 
@@ -70,8 +84,8 @@ export default function ChatPage() {
         </div>
         <div className="flex-1 overflow-y-auto">
           {contacts.map(contact => (
-            <div 
-              key={contact.id} 
+            <div
+              key={contact.id}
               className={`p-3 flex items-center gap-3 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer ${contact.id === selectedContact?.id ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''}`}
               onClick={() => handleContactSelect(contact)}
             >
@@ -107,7 +121,7 @@ export default function ChatPage() {
               </div>
             </div>
             <div className="flex-1 p-6 space-y-4 overflow-y-auto bg-secondary/20">
-              {messages.map(msg => (
+              {currentMessages.map(msg => (
                 <div key={msg.id} className={`flex ${msg.self ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-xs lg:max-w-md p-3 rounded-lg ${msg.self ? 'bg-primary text-primary-foreground' : 'bg-card text-card-foreground shadow-sm'}`}>
                     <p className="text-sm">{msg.text}</p>
@@ -119,9 +133,9 @@ export default function ChatPage() {
             <div className="p-4 border-t bg-background">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" disabled><Paperclip className="h-5 w-5" /></Button>
-                <Input 
-                  placeholder="Type your message..." 
-                  className="flex-1" 
+                <Input
+                  placeholder="Type your message..."
+                  className="flex-1"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={(e) => {
@@ -136,7 +150,7 @@ export default function ChatPage() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                Chat is client-side only. Messages are not saved.
+                Chat is client-side only. Messages are not saved. AI Bot does not reply.
               </p>
             </div>
           </>
