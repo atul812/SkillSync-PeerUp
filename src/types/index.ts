@@ -1,7 +1,8 @@
 
 export interface UserProfile {
-  id: string;
+  id: string; // For mock, this might be the email
   name: string;
+  email?: string; // Added for mock auth check
   bio: string;
   avatarUrl?: string;
   skillsToTeach: string[];

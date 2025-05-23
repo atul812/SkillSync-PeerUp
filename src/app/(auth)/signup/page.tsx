@@ -13,19 +13,18 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
-import Image from 'next/image';
 
 const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name too long."),
   email: z.string().email("Invalid email address."),
-  password: z.string().min(6, "Password must be at least 6 characters."),
+  password: z.string().min(6, "Password must be at least 6 characters (mock)."),
 });
 
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpPage() {
   const { signUpUser } = useAuth();
-  const { toast } = useToast();
+  const { toast } = useToast(); // Toast is now handled in AuthContext mostly
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<SignUpFormData>({
@@ -41,18 +40,10 @@ export default function SignUpPage() {
     setIsLoading(true);
     try {
       await signUpUser(data.email, data.password, data.name);
-      toast({
-        title: "Account Created Successfully!",
-        description: "Welcome to SkillSwap! Please complete your profile.",
-      });
-      // Navigation is handled by signUpUser in AuthContext (to /profile)
+      // Success toast and navigation are handled by signUpUser in AuthContext
     } catch (error: any) {
-      // Error is already toasted in AuthContext's signUpUser
-      // toast({
-      //   title: "Sign Up Failed",
-      //   description: error.message || "Could not create your account. Please try again.",
-      //   variant: "destructive",
-      // });
+      // Error toast is handled by signUpUser in AuthContext
+      console.error("Sign up page error:", error.message);
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +56,7 @@ export default function SignUpPage() {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2.5-8.5L12 14l2.5-2.5L17 14l-5-5-5 5z"/>
         </svg>
         <CardTitle className="text-3xl font-bold">Join SkillSwap</CardTitle>
-        <CardDescription>Create your account to start learning and teaching.</CardDescription>
+        <CardDescription>Create your account (mock) to start learning and teaching.</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -103,9 +94,9 @@ export default function SignUpPage() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} className="text-base"/>
+                    <Input type="password" placeholder="•••••••• (mock)" {...field} className="text-base"/>
                   </FormControl>
-                  <FormDescription>Must be at least 6 characters long.</FormDescription>
+                  <FormDescription>Must be at least 6 characters long (for mock purposes).</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import Link from 'next/link'; // Added Link import
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,28 +18,23 @@ import { X, PlusCircle, Save, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
-import { updateProfile as firebaseUpdateProfile } from 'firebase/auth'; // For updating Firebase User
-import { auth } from '@/lib/firebase'; // Firebase auth instance
-// In a real app, you'd have a Firestore or RealtimeDB service to update profile data
-// For now, we'll update the Firebase Auth user's displayName and photoURL, and local state for other fields
+import { useAuth } from '@/contexts/AuthContext';
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name too long."),
   bio: z.string().max(500, "Bio cannot exceed 500 characters.").optional().default(""),
   skillsToTeach: z.array(z.string()).max(10, "You can list up to 10 skills to teach.").default([]),
   skillsToLearn: z.array(z.string()).max(10, "You can list up to 10 skills to learn.").default([]),
-  avatarUrl: z.string().url("Invalid URL for avatar.").optional().default(""),
+  avatarUrl: z.string().url("Invalid URL for avatar (e.g. https://placehold.co/100x100.png)").or(z.literal("")).optional().default(""),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export function EditProfileForm() {
   const { toast } = useToast();
-  const { currentUserProfile, firebaseUser, loading: authLoading } = useAuth(); // Get current user
+  const { currentUserProfile, loading: authLoading, updateCurrentUserProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Form initialized with defaultValues. useEffect will update it once currentUserProfile is loaded.
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -50,7 +46,6 @@ export function EditProfileForm() {
     },
   });
 
-  // Populate form once currentUserProfile is available or changes
   useEffect(() => {
     if (currentUserProfile) {
       form.reset({
@@ -86,38 +81,30 @@ export function EditProfileForm() {
   };
 
   async function onSubmit(data: ProfileFormData) {
-    if (!firebaseUser) {
+    if (!currentUserProfile) {
       toast({ title: "Not Authenticated", description: "Please sign in to update your profile.", variant: "destructive" });
       return;
     }
     setIsSubmitting(true);
     try {
-      // Update Firebase Auth profile (name and photoURL if changed)
-      const updates: { displayName?: string; photoURL?: string } = {};
-      if (data.name !== firebaseUser.displayName) {
-        updates.displayName = data.name;
-      }
-      if (data.avatarUrl && data.avatarUrl !== firebaseUser.photoURL) {
-        updates.photoURL = data.avatarUrl;
-      }
-      if (Object.keys(updates).length > 0) {
-        await firebaseUpdateProfile(firebaseUser, updates);
-      }
-
-      // In a real app, you would save other fields (bio, skills) to your database (e.g., Firestore)
-      // For this demo, we'll assume onAuthStateChanged in AuthContext will pick up displayName/photoURL changes.
-      // Other fields might need a manual update to the AuthContext's currentUserProfile or a re-fetch.
-      // This is a simplification.
-      console.log("Profile data to save (would go to DB):", data);
-
+      // Ensure ID and other non-form fields are preserved if they exist on currentUserProfile
+      const updatedProfileData: UserProfile = {
+        ...currentUserProfile, // Spread existing profile to keep id, tokens, streak etc.
+        name: data.name,
+        bio: data.bio,
+        skillsToTeach: data.skillsToTeach,
+        skillsToLearn: data.skillsToLearn,
+        avatarUrl: data.avatarUrl || `https://placehold.co/100x100.png?text=${data.name.split(' ').map(n=>n[0]).join('').toUpperCase() || 'U'}`, // Default placeholder if empty
+      };
+      
+      await updateCurrentUserProfile(updatedProfileData);
 
       toast({
         title: "Profile Updated",
-        description: "Your SkillSwap profile has been successfully updated.",
+        description: "Your SkillSwap profile has been successfully updated (locally).",
         variant: "default",
       });
-      // Optionally, trigger a refresh of user data in AuthContext if not automatically handled by onAuthStateChanged
-      // For example, by calling a function like `refreshUserProfile()` if you implement it in AuthContext
+      form.reset(updatedProfileData); // Reset form with new data to clear dirty state
     } catch (error: any) {
       toast({
         title: "Update Failed",
@@ -143,7 +130,7 @@ export function EditProfileForm() {
           <Command>
             <CommandInput placeholder={`Search skills to ${type}...`} />
             <CommandList>
-              <CommandEmpty>No skill found. Type to add a custom skill (not implemented for auto-add, select from list or type and click outside).</CommandEmpty>
+              <CommandEmpty>No skill found. Select from list or type and click outside (custom add not fully supported).</CommandEmpty>
               <CommandGroup>
                 {filteredAvailableSkills.slice(0,100).map((skill) => (
                   <CommandItem
@@ -151,7 +138,7 @@ export function EditProfileForm() {
                     value={skill}
                     onSelect={(currentValue) => {
                       onSelectSkill(currentValue);
-                      setOpen(false); // Close popover on selection
+                      setOpen(false);
                     }}
                   >
                     {skill}
@@ -174,7 +161,7 @@ export function EditProfileForm() {
     );
   }
 
-  if (!currentUserProfile) {
+  if (!currentUserProfile && !authLoading) { // Added !authLoading condition
      return (
       <Card className="max-w-2xl mx-auto shadow-xl">
         <CardHeader>
@@ -197,7 +184,7 @@ export function EditProfileForm() {
     <Card className="max-w-2xl mx-auto shadow-xl border-t-4 border-primary">
       <CardHeader>
         <CardTitle className="text-2xl">Edit Your SkillSwap Profile</CardTitle>
-        <CardDescription>Keep your skills and bio up-to-date to find the best matches.</CardDescription>
+        <CardDescription>Keep your skills and bio up-to-date to find the best matches. (Changes saved locally)</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -222,9 +209,9 @@ export function EditProfileForm() {
                 <FormItem>
                   <FormLabel>Avatar URL (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/avatar.png" {...field} />
+                    <Input placeholder="https://placehold.co/100x100.png" {...field} />
                   </FormControl>
-                   <FormDescription>Link to your profile picture. Leave blank for default.</FormDescription>
+                   <FormDescription>Link to your profile picture. Leave blank for default placeholder.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -320,7 +307,7 @@ export function EditProfileForm() {
                 </>
               )}
             </Button>
-             {!form.formState.isDirty && !isSubmitting && <p className="ml-4 text-sm text-muted-foreground">No changes to save.</p>}
+             {!form.formState.isDirty && !isSubmitting && !authLoading && <p className="ml-4 text-sm text-muted-foreground">No changes to save.</p>}
           </CardFooter>
         </form>
       </Form>

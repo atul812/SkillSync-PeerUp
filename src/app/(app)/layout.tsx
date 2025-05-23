@@ -4,9 +4,9 @@
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import React, { useEffect } from "react"; // Import useEffect
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation"; // Corrected import for useRouter
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react"; 
 
 export default function AppLayout({
@@ -19,15 +19,26 @@ export default function AppLayout({
 
   useEffect(() => {
     if (!loading && !currentUserProfile) {
-      router.replace('/signin'); // Use replace to avoid adding to history stack
+      router.replace('/signin'); 
     }
   }, [currentUserProfile, loading, router]);
 
-  if (loading || !currentUserProfile) {
+  if (loading) { // Show loader if auth state is loading OR if user is null but still loading
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="ml-4 text-lg text-muted-foreground">Loading your SkillSwap experience...</p>
+      </div>
+    );
+  }
+
+  if (!currentUserProfile) { // If done loading and still no user, show minimal or redirect (already handled by useEffect)
+     // This state should ideally be brief due to the useEffect redirect.
+     // You could show a "Redirecting to sign-in..." message or a blank screen.
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="ml-4 text-lg text-muted-foreground">Redirecting to sign in...</p>
       </div>
     );
   }

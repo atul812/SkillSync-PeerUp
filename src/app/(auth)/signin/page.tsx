@@ -13,18 +13,17 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
-import Image from 'next/image';
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address."),
-  password: z.string().min(1, "Password is required."), // Min 1 for presence, Firebase handles length
+  password: z.string().min(1, "Password is required."), // For mock, we don't enforce length here
 });
 
 type SignInFormData = z.infer<typeof signInSchema>;
 
 export default function SignInPage() {
   const { signInUser } = useAuth();
-  const { toast } = useToast();
+  const { toast } = useToast(); // Toast is now handled in AuthContext mostly
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<SignInFormData>({
@@ -39,18 +38,10 @@ export default function SignInPage() {
     setIsLoading(true);
     try {
       await signInUser(data.email, data.password);
-      toast({
-        title: "Signed In Successfully",
-        description: "Welcome back to SkillSwap!",
-      });
-      // Navigation is handled by signInUser in AuthContext
+      // Success toast and navigation are handled by signInUser in AuthContext
     } catch (error: any) {
-      // Error is already toasted in AuthContext's signInUser
-      // toast({
-      //   title: "Sign In Failed",
-      //   description: error.message || "Could not sign in. Please check your credentials.",
-      //   variant: "destructive",
-      // });
+      // Error toast is handled by signInUser in AuthContext
+      console.error("Sign in page error:", error.message);
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +54,7 @@ export default function SignInPage() {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2.5-8.5L12 14l2.5-2.5L17 14l-5-5-5 5z"/>
         </svg>
         <CardTitle className="text-3xl font-bold">SkillSwap</CardTitle>
-        <CardDescription>Sign in to continue your learning journey.</CardDescription>
+        <CardDescription>Sign in to continue your learning journey. (Mock Auth)</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -88,7 +79,7 @@ export default function SignInPage() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} className="text-base"/>
+                    <Input type="password" placeholder="•••••••• (mock)" {...field} className="text-base"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

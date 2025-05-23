@@ -1,4 +1,8 @@
+// This file is no longer used with the mock authentication system.
+// You can delete it if you are not planning to revert to Firebase Authentication.
 
+// Original content (commented out):
+/*
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 
@@ -29,3 +33,5 @@ if (!getApps().length) {
 const auth = getAuth(app);
 
 export { app, auth };
+*/
+export {}; // Add an empty export to make it a module and prevent errors if other files still try to import.

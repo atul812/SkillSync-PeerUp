@@ -2,70 +2,82 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase'; // Use the initialized auth instance
 import type { UserProfile } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
+const LOCAL_STORAGE_USER_KEY = 'skillSwapUserProfile';
 
 interface AuthContextType {
   currentUserProfile: UserProfile | null;
-  firebaseUser: User | null;
   loading: boolean;
-  signUpUser: (email: string, password: string, name: string) => Promise<void>;
-  signInUser: (email: string, password: string) => Promise<void>;
+  signUpUser: (email: string, password: string, name: string) => Promise<void>; // Password is not really used for check
+  signInUser: (email: string, password: string) => Promise<void>; // Password is not really used for check
   signOutUser: () => Promise<void>;
+  updateCurrentUserProfile: (updatedProfileData: Partial<UserProfile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setFirebaseUser(user);
-      if (user) {
-        // Create a basic UserProfile from Firebase User.
-        // In a real app, you'd fetch more details from Firestore/your backend.
-        const profileName = user.displayName || "New User";
-        const initials = profileName.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-        
-        setCurrentUserProfile({
-          id: user.uid,
-          name: profileName,
-          bio: `Welcome ${profileName}! Update your bio in the profile section.`, // Default bio
-          skillsToTeach: [], 
-          skillsToLearn: [], 
-          tokens: 0, 
-          streak: 0, 
-          avatarUrl: user.photoURL || `https://placehold.co/100x100.png?text=${initials}`,
-        });
-      } else {
-        setCurrentUserProfile(null);
+    setLoading(true);
+    try {
+      const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+      if (storedUser) {
+        setCurrentUserProfile(JSON.parse(storedUser));
       }
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    } catch (error) {
+      console.error("Error loading user from localStorage:", error);
+      localStorage.removeItem(LOCAL_STORAGE_USER_KEY); // Clear corrupted data
+    }
+    setLoading(false);
   }, []);
 
   const signUpUser = async (email: string, password: string, name: string) => {
     setLoading(true);
+    // Basic validation (in a real app, do more)
+    if (!email || !password || !name) {
+      toast({ title: "Sign Up Error", description: "All fields are required.", variant: "destructive" });
+      setLoading(false);
+      throw new Error("All fields are required.");
+    }
+
+    // Mock: Check if email already exists (in a real app, check DB)
+    const existingUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+    if (existingUser && JSON.parse(existingUser).email === email) {
+        toast({ title: "Sign Up Error", description: "Email already in use.", variant: "destructive" });
+        setLoading(false);
+        throw new Error("Email already in use.");
+    }
+    
+    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+    const newUserProfile: UserProfile = {
+      id: email, // Using email as ID for simplicity in mock
+      name,
+      email, // Storing email for mock sign-in check
+      bio: `Welcome ${name}! Update your bio to get started.`,
+      skillsToTeach: [],
+      skillsToLearn: [],
+      tokens: 0,
+      streak: 0,
+      avatarUrl: `https://placehold.co/100x100.png?text=${initials}`,
+    };
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: name });
-      // The onAuthStateChanged listener will update firebaseUser and currentUserProfile
-      // You might want to create a user document in Firestore/RTDB here as well
-      router.push('/profile'); // Redirect to profile to complete setup
-    } catch (error: any) {
-      console.error("Error signing up:", error);
-      toast({ title: "Sign Up Error", description: error.message, variant: "destructive" });
-      throw error; 
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newUserProfile));
+      setCurrentUserProfile(newUserProfile);
+      toast({ title: "Account Created!", description: `Welcome ${name}! Please complete your profile.` });
+      router.push('/profile');
+    } catch (error) {
+      console.error("Error saving user to localStorage during signup:", error);
+      toast({ title: "Sign Up Error", description: "Could not create account.", variant: "destructive" });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -73,13 +85,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInUser = async (email: string, password: string) => {
     setLoading(true);
+    if (!email || !password) {
+      toast({ title: "Sign In Error", description: "Email and password are required.", variant: "destructive" });
+      setLoading(false);
+      throw new Error("Email and password are required.");
+    }
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // The onAuthStateChanged listener will update firebaseUser and currentUserProfile
-      router.push('/dashboard'); 
-    } catch (error: any) {
-      console.error("Error signing in:", error);
-      toast({ title: "Sign In Error", description: error.message, variant: "destructive" });
+      const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+      if (storedUser) {
+        const user: UserProfile & { email?: string } = JSON.parse(storedUser);
+        // Mock check: In a real app, you'd verify the password against a hash.
+        // Here, we just check if the email matches the one stored during a mock signup.
+        if (user.email === email || user.id === email) { // Allow sign in with id (which is email) or actual email field
+          setCurrentUserProfile(user as UserProfile);
+          toast({ title: "Signed In", description: `Welcome back, ${user.name}!` });
+          router.push('/dashboard');
+        } else {
+          toast({ title: "Sign In Error", description: "Invalid email or password.", variant: "destructive" });
+          throw new Error("Invalid email or password.");
+        }
+      } else {
+        toast({ title: "Sign In Error", description: "No user found. Please sign up.", variant: "destructive" });
+        throw new Error("No user found.");
+      }
+    } catch (error) {
+      console.error("Error during sign in:", error);
+      // Toast is handled above or if error is not one of ours
+      if (!(error instanceof Error && (error.message === "Invalid email or password." || error.message === "No user found."))) {
+        toast({ title: "Sign In Error", description: "An unexpected error occurred.", variant: "destructive" });
+      }
       throw error;
     } finally {
       setLoading(false);
@@ -89,30 +123,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOutUser = async () => {
     setLoading(true);
     try {
-      await firebaseSignOut(auth);
-      setCurrentUserProfile(null); // Explicitly clear profile
-      setFirebaseUser(null); // Explicitly clear firebase user
+      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+      setCurrentUserProfile(null);
+      toast({ title: "Signed Out", description: "You have been successfully signed out." });
       router.push('/signin');
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error signing out:", error);
-      toast({ title: "Sign Out Error", description: error.message, variant: "destructive" });
+      toast({ title: "Sign Out Error", description: "Could not sign out.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateCurrentUserProfile = async (updatedProfileData: Partial<UserProfile>) => {
+    if (!currentUserProfile) {
+      toast({ title: "Error", description: "No user logged in to update.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const newProfile = { ...currentUserProfile, ...updatedProfileData };
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newProfile));
+      setCurrentUserProfile(newProfile);
+      // toast({ title: "Profile Updated", description: "Your profile has been saved locally." });
+    } catch (error) {
+      console.error("Error updating profile in localStorage:", error);
+      toast({ title: "Update Error", description: "Could not save profile changes.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ currentUserProfile, firebaseUser, loading, signUpUser, signInUser, signOutUser }}>
-      {!loading && children}
-      {loading && (
-         <div className="flex h-screen w-full items-center justify-center bg-background">
-          {/* You can replace this with a more sophisticated loading spinner component */}
-          <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-      )}
+    <AuthContext.Provider value={{ currentUserProfile, loading, signUpUser, signInUser, signOutUser, updateCurrentUserProfile }}>
+      {children}
     </AuthContext.Provider>
   );
 };
