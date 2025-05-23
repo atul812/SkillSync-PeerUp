@@ -1,61 +1,59 @@
 
-"use client"; // Add use client for useState and event handlers
+"use client"; 
 
-import { useState } from "react"; // Import useState
+import { useState, useEffect } from "react"; 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Send, Paperclip, Search } from "lucide-react";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 
 // Mock data for chat interface - contacts can remain mock for now
 const contacts = [
   { id: "user_jane_doe", name: "Jane Doe", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "Sure, I can help with that!", unread: 2, online: true },
   { id: "user_john_smith", name: "John Smith", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "Thanks for the session!", unread: 0, online: false },
-  { id: "user_ai_helper", name: "SkillSwap AI Bot", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "How can I assist you today?", unread: 0, online: true },
+  { id: "user_ai_helper", name: "SkillSync & PeerUp AI Bot", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "How can I assist you today?", unread: 0, online: true },
 ];
-const selectedContactInitial = contacts[0]; // Assuming the first contact is selected
+const selectedContactInitial = contacts[0]; 
 
-// Initial messages are specific to the initially selected contact (Jane Doe & Alex Johnson)
+// Initial messages are specific to the initially selected contact (Jane Doe & Alex Johnson - Alex is a mock contact here)
 const initialMessagesForJane = [
   { id: "msg1", sender: "Jane Doe", text: "Hey Alex! I saw you're looking to learn Data Structures. I can help with that.", time: "10:30 AM", self: false },
-  { id: "msg2", sender: "Alex Johnson", text: "Hi Jane! That would be amazing. I'm particularly struggling with graphs.", time: "10:32 AM", self: true },
+  { id: "msg2", sender: "Alex Johnson (Mock User)", text: "Hi Jane! That would be amazing. I'm particularly struggling with graphs.", time: "10:32 AM", self: true }, // Clarified Alex is mock here
   { id: "msg3", sender: "Jane Doe", text: "No problem! Graphs can be tricky. When are you free for a quick session?", time: "10:33 AM", self: false },
 ];
 
-// For other contacts, start with an empty message list or specific initial messages if desired.
-// For simplicity, we'll start them empty and let the user populate client-side.
 const initialMessagesMap: Record<string, Array<{id: string; sender: string; text: string; time: string; self: boolean}>> = {
-    [contacts[0].id]: initialMessagesForJane, // Jane Doe
-    [contacts[1].id]: [], // John Smith - starts empty
-    [contacts[2].id]: [], // SkillSwap AI Bot - starts empty, maybe a welcome message?
+    [contacts[0].id]: initialMessagesForJane, 
+    [contacts[1].id]: [], 
+    [contacts[2].id]: [ { id: "bot-msg1", sender: "SkillSync & PeerUp AI Bot", text: "Hello! How can I help you match skills today? (I'm not interactive yet!)", time: "9:00 AM", self: false }],
 };
 
 
 export default function ChatPage() {
+  const { currentUserProfile } = useAuth(); // Get current user
   const [selectedContact, setSelectedContact] = useState(selectedContactInitial);
-  // Use a state that holds messages for all contacts
   const [allMessages, setAllMessages] = useState(initialMessagesMap);
   const [newMessage, setNewMessage] = useState("");
 
-  // Get messages for the currently selected contact
   const currentMessages = allMessages[selectedContact.id] || [];
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
 
   const handleSendMessage = () => {
-    if (newMessage.trim() === "") return;
+    if (newMessage.trim() === "" || !currentUserProfile) return;
 
     const messageToSend = {
       id: `msg${currentMessages.length + 1}-${Date.now()}`,
-      sender: "Alex Johnson", // Hardcoded current user
+      sender: currentUserProfile.name, // Use logged-in user's name
       text: newMessage.trim(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       self: true,
     };
 
-    console.log("Sending message:", messageToSend, "to contact:", selectedContact.id); // Debug log
+    console.log("Sending message:", messageToSend, "to contact:", selectedContact.id); 
 
     setAllMessages(prevAllMessages => ({
         ...prevAllMessages,
@@ -66,8 +64,6 @@ export default function ChatPage() {
 
   const handleContactSelect = (contact: typeof contacts[0]) => {
     setSelectedContact(contact);
-    // The currentMessages will automatically update based on selectedContact.id from allMessages
-    // No need to explicitly set messages here unless you want to re-fetch or reset.
   };
 
 
@@ -144,8 +140,9 @@ export default function ChatPage() {
                       handleSendMessage();
                     }
                   }}
+                  disabled={!currentUserProfile} // Disable if no user logged in
                 />
-                <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
+                <Button onClick={handleSendMessage} disabled={!newMessage.trim() || !currentUserProfile}>
                   <Send className="h-5 w-5" /> Send
                 </Button>
               </div>

@@ -1,21 +1,47 @@
 
-// This page should ideally be a server component, fetching initial data.
-// For client components like RecommendationsDisplay, they will handle their own client-side fetching.
+"use client"; // Convert to client component
+
 import { SkillOverviewCard } from "@/components/dashboard/SkillOverviewCard";
 import { GamificationWidget } from "@/components/dashboard/GamificationWidget";
 import { RecommendationsDisplay } from "@/components/dashboard/RecommendationsDisplay";
 import { LearningRoadmapPreview } from "@/components/dashboard/LearningRoadmapPreview";
-import { mockUserProfile, mockLearningRoadmap, mockLeaderboard } from "@/lib/mock-data";
+import { mockLearningRoadmap, mockLeaderboard } from "@/lib/mock-data"; // Keep mockLeaderboard for rank calculation
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import { Zap, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
+import { useEffect, useState } from "react";
+import type { UserProfile as UserProfileType } from "@/types"; // Import UserProfile type
 
-export default async function DashboardPage() {
-  // In a real app, this data would be fetched from a database or API based on the logged-in user.
-  const userProfile = mockUserProfile;
-  const learningRoadmap = mockLearningRoadmap;
-  const userRank = mockLeaderboard.find(entry => entry.userId === userProfile.id)?.rank;
+export default function DashboardPage() {
+  const { currentUserProfile, loading: authLoading } = useAuth();
+  // Local state to hold user profile for display to avoid issues with initial null/loading state
+  const [displayProfile, setDisplayProfile] = useState<UserProfileType | null>(null);
+  
+  useEffect(() => {
+    if (currentUserProfile) {
+      setDisplayProfile(currentUserProfile);
+    }
+  }, [currentUserProfile]);
+
+  // In a real app, learningRoadmap would likely be fetched or be user-specific.
+  const learningRoadmap = mockLearningRoadmap; 
+  
+  // Calculate userRank based on displayProfile if available
+  const userRank = displayProfile ? mockLeaderboard.find(entry => entry.userId === displayProfile.id)?.rank : undefined;
+
+  if (authLoading || !displayProfile) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-muted-foreground">Loading dashboard...</p>
+      </div>
+    );
+  }
+  
+  // Now we are sure displayProfile is not null
+  const userProfile = displayProfile;
 
   return (
     <div className="space-y-8">
@@ -44,12 +70,13 @@ export default async function DashboardPage() {
         <GamificationWidget 
           tokens={userProfile.tokens}
           streak={userProfile.streak}
-          rank={userRank}
+          rank={userRank} // Pass calculated rank
         />
         <LearningRoadmapPreview roadmap={learningRoadmap} />
       </div>
 
       <div>
+        {/* RecommendationsDisplay already expects currentUserProfile from props and handles its own loading/state */}
         <RecommendationsDisplay currentUserProfile={userProfile} />
       </div>
 
