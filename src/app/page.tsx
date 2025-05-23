@@ -31,7 +31,7 @@ export default function LandingPage() {
      if (loading) {
       return <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading...</>;
     }
-    return "Sign Up & Start Swapping"; // This button text seems generic enough, or can be changed too if preferred.
+    return "Sign Up & Start Swapping"; 
   }
 
 
@@ -39,7 +39,12 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen">
       <header className="bg-primary text-primary-foreground py-6 shadow-md">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link href="/" className="text-3xl font-bold">SkillSync & PeerUp</Link>
+          <Link href="/" className="flex items-center text-3xl font-bold">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-accent mr-2">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2.5-8.5L12 14l2.5-2.5L17 14l-5-5-5 5z"/>
+            </svg>
+            SkillSync & PeerUp
+          </Link>
           <nav>
             <Link href={getStartedLink} passHref>
               <Button variant="secondary" disabled={loading}>
