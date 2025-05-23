@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    /* Black, Gold, Red Theme */
+    /* Black, Gold, Red Theme - Revised for better contrast */
     --background: 240 10% 4%; /* Very Dark Blue - almost black */
     --foreground: 45 60% 88%; /* Pale Gold/Off-white for text */
 
