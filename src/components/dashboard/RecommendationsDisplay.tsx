@@ -6,12 +6,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, UserCheck, RefreshCw, Zap, Send, GitFork } from "lucide-react"; // Added GitFork for swap
+import { Loader2, UserCheck, RefreshCw, Zap, Send, GitFork } from "lucide-react";
 import type { AISkillMatchInput, AISkillMatchOutput, UserProfile, SkillMatch } from '@/types';
 import { recommendSkillMatches as recommendSkillMatchesFlow } from '@/ai/flows/skill-match-recommendation';
 import { Badge } from '@/components/ui/badge';
-import { mockSkillMatches } from '@/lib/mock-data';
-import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { mockSkillMatches, availableSkills as allAvailableSkills } from '@/lib/mock-data'; // Added allAvailableSkills
+import { useToast } from "@/hooks/use-toast";
 
 interface RecommendationsDisplayProps {
   currentUserProfile: UserProfile;
@@ -28,17 +28,17 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
   const [recommendations, setRecommendations] = useState<SkillMatch[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast(); // Initialize useToast
+  const { toast } = useToast();
 
   const fetchRecommendations = async () => {
     if (!currentUserProfile.skillsToLearn.length && !currentUserProfile.skillsToTeach.length) {
       setError("Please update your profile with skills to teach and learn to get recommendations.");
-      setRecommendations([]);
+      setRecommendations([]); // Clear existing recommendations
       return;
     }
 
     setIsLoading(true);
-    setError(null); // Clear previous errors before fetching
+    setError(null);
 
     const input: AISkillMatchInput = {
       teachingSkills: currentUserProfile.skillsToTeach,
@@ -51,36 +51,80 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
       
       if (result.recommendedMatches && result.recommendedMatches.length > 0) {
         const formattedMatches: SkillMatch[] = result.recommendedMatches.map((name, index) => {
-          // Prioritize actual skills from profile for a more logical mock
-          const skillsTheyTeachYou = currentUserProfile.skillsToLearn.length > 0 
-            ? [...currentUserProfile.skillsToLearn].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToLearn.length))
-            : ["Relevant Skill A", "Relevant Skill B"]; // Fallback if user has no skillsToLearn
+          const userWantsToLearn = [...currentUserProfile.skillsToLearn];
+          const userCanTeach = [...currentUserProfile.skillsToTeach];
+          
+          // --- Logic for skillsTheyTeachYou (skills the matched user can teach YOU) ---
+          let skillsTheyTeachYou: string[] = [];
+          const targetTeachCount = Math.floor(Math.random() * 2) + 2; // Aim for 2 or 3 skills
 
-          const skillsYouTeachThem = currentUserProfile.skillsToTeach.length > 0
-            ? [...currentUserProfile.skillsToTeach].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToTeach.length))
-            : ["Your Skill X", "Your Skill Y"]; // Fallback if user has no skillsToTeach
+          // Try to include one skill the user actively wants to learn
+          if (userWantsToLearn.length > 0) {
+            const primaryLearnSkill = userWantsToLearn[Math.floor(Math.random() * userWantsToLearn.length)];
+            if (!skillsTheyTeachYou.includes(primaryLearnSkill)) {
+                 skillsTheyTeachYou.push(primaryLearnSkill);
+            }
+          }
+
+          // Add more diverse skills up to targetTeachCount
+          if (allAvailableSkills.length > 0) {
+            // Skills the matched user could teach that current user doesn't teach and aren't already listed
+            const potentialAdditionalSkillsPool = allAvailableSkills.filter(
+              s => !userCanTeach.includes(s) && !skillsTheyTeachYou.includes(s)
+            );
+            potentialAdditionalSkillsPool.sort(() => 0.5 - Math.random()); // Shuffle
+
+            while (skillsTheyTeachYou.length < targetTeachCount && potentialAdditionalSkillsPool.length > 0) {
+              const skillToAdd = potentialAdditionalSkillsPool.pop();
+              if (skillToAdd && !skillsTheyTeachYou.includes(skillToAdd)) { // Double check inclusion
+                  skillsTheyTeachYou.push(skillToAdd);
+              }
+            }
+          }
+          
+          if (skillsTheyTeachYou.length === 0) { // Fallback if list is still empty
+             skillsTheyTeachYou = ["General Coding Help", "Project Collaboration"].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 2) + 1);
+          } else if (skillsTheyTeachYou.length === 1 && targetTeachCount > 1) { // If only got 1, try to add a generic one
+             const fallbackSkill = "Creative Problem Solving"; 
+             if(!skillsTheyTeachYou.includes(fallbackSkill) && !userCanTeach.includes(fallbackSkill)){
+                 skillsTheyTeachYou.push(fallbackSkill);
+             }
+          }
+          skillsTheyTeachYou = skillsTheyTeachYou.slice(0, targetTeachCount); // Ensure max length
+
+          // --- Logic for skillsYouTeachThem (skills YOU can teach the matched user) ---
+          let skillsYouTeachThem: string[] = [];
+          if (userCanTeach.length > 0) {
+            const shuffledUserTeachSkills = [...userCanTeach].sort(() => 0.5 - Math.random());
+            skillsYouTeachThem = shuffledUserTeachSkills.slice(0, Math.min(2, shuffledUserTeachSkills.length));
+          } else {
+            // Fallback if user teaches nothing
+            skillsYouTeachThem = ["Brainstorming Ideas", "Study Techniques"].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 2) + 1);
+          }
             
+          const reasoningText = (index === 0 && result.reasoning) 
+            ? result.reasoning 
+            : `${name} has a diverse skill set. They could help you with ${skillsTheyTeachYou.join(' or ')}, and you could share your knowledge in ${skillsYouTeachThem.join(' or ')}. A great potential match!`;
+
           return {
             userId: `ai_match_${index}_${Date.now()}`,
             name: name,
             avatarUrl: `https://placehold.co/80x80.png?text=${getInitials(name)}`,
             commonSkillsToTeach: skillsTheyTeachYou,
             commonSkillsToLearn: skillsYouTeachThem,
-            reasoning: index === 0 && result.reasoning ? result.reasoning : `This user has skills that complement yours. ${name} can teach you ${skillsTheyTeachYou.join(', ') || 'some interesting skills'}, and you could teach them ${skillsYouTeachThem.join(', ') || 'some of your skills'}.`
+            reasoning: reasoningText
           };
         });
         setRecommendations(formattedMatches);
-        setError(null); // Clear any previous "add skills" error if matches are found
+        setError(null);
       } else {
-        // AI returned no specific matches, show mockSkillMatches without specific error message
-        setRecommendations(mockSkillMatches);
-        setError(null); // No error message, just show mock data
+        setRecommendations(mockSkillMatches); // Fallback to generic mock if AI returns no names
+        setError(null); 
       }
     } catch (e) {
       console.error("Failed to fetch recommendations:", e);
-      // Actual error during AI call, show mockSkillMatches without specific error message
-      setRecommendations(mockSkillMatches);
-      setError(null); // No error message, just show mock data
+      setRecommendations(mockSkillMatches); // Fallback to generic mock on error
+      setError(null); 
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +133,7 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
   useEffect(() => {
     if (currentUserProfile && (currentUserProfile.skillsToLearn.length > 0 || currentUserProfile.skillsToTeach.length > 0)) {
       fetchRecommendations();
-    } else if (currentUserProfile) { // Added currentUserProfile check here
+    } else if (currentUserProfile) {
        setError("Add skills to your profile to discover potential matches!");
        setRecommendations([]);
     }
@@ -119,7 +163,6 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
     });
   };
 
-  // Ensure currentUserProfile exists before trying to access its properties
   if (!currentUserProfile) {
     return (
         <Card className="shadow-lg">
@@ -213,7 +256,6 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
         ) : (
           !isLoading && !(currentUserProfile.skillsToLearn.length === 0 && currentUserProfile.skillsToTeach.length === 0) && <p className="text-muted-foreground text-center py-8">No specific recommendations found. Try adjusting your skills or check back later!</p>
         )}
-         {/* Fallback message if no skills are set and no error message already exists from the profile check */}
         {!isLoading && recommendations.length === 0 && (currentUserProfile.skillsToLearn.length === 0 && currentUserProfile.skillsToTeach.length === 0 && !error) && (
              <p className="text-muted-foreground text-center py-8">Add skills to your profile to get recommendations.</p>
         )}
