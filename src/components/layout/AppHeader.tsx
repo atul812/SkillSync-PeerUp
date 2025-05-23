@@ -12,24 +12,43 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Flame, Coins, Menu, LogOut, UserCircle, Settings, BarChart3 } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar"; // Assuming sidebar provides a toggle for mobile
+import { Flame, Coins, Menu, LogOut, UserCircle, Settings, BarChart3, Loader2 } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar"; 
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth if needed for signout, or pass as prop
+import { useState } } from "react"; // For signout loading state
 
 interface AppHeaderProps {
   userName: string;
   avatarUrl?: string;
   tokens: number;
   streak: number;
+  onSignOut: () => Promise<void>; 
 }
 
-export function AppHeader({ userName, avatarUrl, tokens, streak }: AppHeaderProps) {
-  const { toggleSidebar, isMobile } = useSidebar(); // Get toggle from context
+export function AppHeader({ userName, avatarUrl, tokens, streak, onSignOut }: AppHeaderProps) {
+  const { toggleSidebar, isMobile } = useSidebar(); 
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const getInitials = (name: string) => {
+    if (!name) return "U";
     const names = name.split(' ');
+    if (names.length === 0 || !names[0]) return "U";
     if (names.length === 1) return names[0][0].toUpperCase();
-    return names[0][0].toUpperCase() + names[names.length - 1][0].toUpperCase();
+    return (names[0][0].toUpperCase() + (names[names.length - 1][0]?.toUpperCase() || "")).slice(0,2);
   }
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await onSignOut();
+    } catch (error) {
+      console.error("Sign out error in header", error);
+      // Toast is handled in AuthContext
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 shadow-sm">
@@ -94,11 +113,13 @@ export function AppHeader({ userName, avatarUrl, tokens, streak }: AppHeaderProp
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/" className="flex items-center gap-2 cursor-pointer text-red-600 hover:!text-red-600">
-                <LogOut className="h-4 w-4" />
-                <span>Log out</span>
-              </Link>
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              className="flex items-center gap-2 cursor-pointer text-red-600 hover:!text-red-600 focus:!text-red-600 focus:!bg-red-50"
+            >
+              {isSigningOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+              <span>{isSigningOut ? "Signing Out..." : "Log out"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

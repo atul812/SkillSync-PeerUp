@@ -1,100 +1,131 @@
 
 "use client";
 
-import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import type { UserProfile } from '@/types';
-import { mockUserProfile, availableSkills as allAvailableSkills } from '@/lib/mock-data'; // For initial data and skill suggestions
+import { availableSkills as allAvailableSkills } from '@/lib/mock-data';
 import { useToast } from "@/hooks/use-toast";
-import { X, PlusCircle, Save } from 'lucide-react';
+import { X, PlusCircle, Save, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
+import { updateProfile as firebaseUpdateProfile } from 'firebase/auth'; // For updating Firebase User
+import { auth } from '@/lib/firebase'; // Firebase auth instance
+// In a real app, you'd have a Firestore or RealtimeDB service to update profile data
+// For now, we'll update the Firebase Auth user's displayName and photoURL, and local state for other fields
 
 const profileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
-  bio: z.string().max(500, "Bio cannot exceed 500 characters.").optional(),
-  skillsToTeach: z.array(z.string()).max(10, "You can list up to 10 skills to teach."),
-  skillsToLearn: z.array(z.string()).max(10, "You can list up to 10 skills to learn."),
+  name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name too long."),
+  bio: z.string().max(500, "Bio cannot exceed 500 characters.").optional().default(""),
+  skillsToTeach: z.array(z.string()).max(10, "You can list up to 10 skills to teach.").default([]),
+  skillsToLearn: z.array(z.string()).max(10, "You can list up to 10 skills to learn.").default([]),
+  avatarUrl: z.string().url("Invalid URL for avatar.").optional().default(""),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-// Dummy update function - in a real app, this would be a server action
-async function updateUserProfile(data: ProfileFormData): Promise<UserProfile> {
-  console.log("Updating profile:", data);
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return {
-    ...mockUserProfile, // Return updated mock profile
-    ...data,
-  };
-}
-
-
 export function EditProfileForm() {
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState<UserProfile>(mockUserProfile); // Or fetch from context/API
-
+  const { currentUserProfile, firebaseUser, loading: authLoading } = useAuth(); // Get current user
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Form initialized with defaultValues. useEffect will update it once currentUserProfile is loaded.
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: currentUser.name || "",
-      bio: currentUser.bio || "",
-      skillsToTeach: currentUser.skillsToTeach || [],
-      skillsToLearn: currentUser.skillsToLearn || [],
+      name: "",
+      bio: "",
+      skillsToTeach: [],
+      skillsToLearn: [],
+      avatarUrl: "",
     },
   });
 
-  const [teachSkillInput, setTeachSkillInput] = useState('');
-  const [learnSkillInput, setLearnSkillInput] = useState('');
-  
+  // Populate form once currentUserProfile is available or changes
+  useEffect(() => {
+    if (currentUserProfile) {
+      form.reset({
+        name: currentUserProfile.name || "",
+        bio: currentUserProfile.bio || "",
+        skillsToTeach: currentUserProfile.skillsToTeach || [],
+        skillsToLearn: currentUserProfile.skillsToLearn || [],
+        avatarUrl: currentUserProfile.avatarUrl || "",
+      });
+    }
+  }, [currentUserProfile, form]);
+
+
   const [openTeachPopover, setOpenTeachPopover] = useState(false);
   const [openLearnPopover, setOpenLearnPopover] = useState(false);
 
-
   const handleAddSkill = (type: 'teach' | 'learn', skill: string) => {
     if (!skill.trim()) return;
-    const currentSkills = type === 'teach' ? form.getValues("skillsToTeach") : form.getValues("skillsToLearn");
+    const fieldName = type === 'teach' ? "skillsToTeach" : "skillsToLearn";
+    const currentSkills = form.getValues(fieldName);
     if (currentSkills.length < 10 && !currentSkills.includes(skill.trim())) {
       const newSkills = [...currentSkills, skill.trim()];
-      type === 'teach' ? form.setValue("skillsToTeach", newSkills) : form.setValue("skillsToLearn", newSkills);
+      form.setValue(fieldName, newSkills, { shouldValidate: true, shouldDirty: true });
     }
-    type === 'teach' ? setTeachSkillInput('') : setLearnSkillInput('');
     type === 'teach' ? setOpenTeachPopover(false) : setOpenLearnPopover(false);
   };
 
   const handleRemoveSkill = (type: 'teach' | 'learn', skillToRemove: string) => {
-    const currentSkills = type === 'teach' ? form.getValues("skillsToTeach") : form.getValues("skillsToLearn");
+    const fieldName = type === 'teach' ? "skillsToTeach" : "skillsToLearn";
+    const currentSkills = form.getValues(fieldName);
     const newSkills = currentSkills.filter(skill => skill !== skillToRemove);
-    type === 'teach' ? form.setValue("skillsToTeach", newSkills) : form.setValue("skillsToLearn", newSkills);
+    form.setValue(fieldName, newSkills, { shouldValidate: true, shouldDirty: true });
   };
 
   async function onSubmit(data: ProfileFormData) {
+    if (!firebaseUser) {
+      toast({ title: "Not Authenticated", description: "Please sign in to update your profile.", variant: "destructive" });
+      return;
+    }
+    setIsSubmitting(true);
     try {
-      const updatedProfile = await updateUserProfile(data);
-      setCurrentUser(updatedProfile); // Update local state if needed
+      // Update Firebase Auth profile (name and photoURL if changed)
+      const updates: { displayName?: string; photoURL?: string } = {};
+      if (data.name !== firebaseUser.displayName) {
+        updates.displayName = data.name;
+      }
+      if (data.avatarUrl && data.avatarUrl !== firebaseUser.photoURL) {
+        updates.photoURL = data.avatarUrl;
+      }
+      if (Object.keys(updates).length > 0) {
+        await firebaseUpdateProfile(firebaseUser, updates);
+      }
+
+      // In a real app, you would save other fields (bio, skills) to your database (e.g., Firestore)
+      // For this demo, we'll assume onAuthStateChanged in AuthContext will pick up displayName/photoURL changes.
+      // Other fields might need a manual update to the AuthContext's currentUserProfile or a re-fetch.
+      // This is a simplification.
+      console.log("Profile data to save (would go to DB):", data);
+
+
       toast({
         title: "Profile Updated",
         description: "Your SkillSwap profile has been successfully updated.",
         variant: "default",
       });
-      // Potentially redirect or refresh data on other parts of the app
-    } catch (error) {
+      // Optionally, trigger a refresh of user data in AuthContext if not automatically handled by onAuthStateChanged
+      // For example, by calling a function like `refreshUserProfile()` if you implement it in AuthContext
+    } catch (error: any) {
       toast({
         title: "Update Failed",
-        description: "Could not update your profile. Please try again.",
+        description: error.message || "Could not update your profile. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   }
   
@@ -108,18 +139,19 @@ export function EditProfileForm() {
             <PlusCircle className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-60 overflow-y-auto">
           <Command>
             <CommandInput placeholder={`Search skills to ${type}...`} />
             <CommandList>
-              <CommandEmpty>No skill found. You can add a custom skill by typing and pressing Enter (if implemented).</CommandEmpty>
+              <CommandEmpty>No skill found. Type to add a custom skill (not implemented for auto-add, select from list or type and click outside).</CommandEmpty>
               <CommandGroup>
-                {filteredAvailableSkills.slice(0,100).map((skill) => ( // Limit displayed skills for performance
+                {filteredAvailableSkills.slice(0,100).map((skill) => (
                   <CommandItem
                     key={skill}
                     value={skill}
                     onSelect={(currentValue) => {
                       onSelectSkill(currentValue);
+                      setOpen(false); // Close popover on selection
                     }}
                   >
                     {skill}
@@ -133,9 +165,36 @@ export function EditProfileForm() {
     );
   };
 
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-3 text-muted-foreground">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (!currentUserProfile) {
+     return (
+      <Card className="max-w-2xl mx-auto shadow-xl">
+        <CardHeader>
+          <CardTitle className="text-2xl">Profile Not Found</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Please sign in to view and edit your profile.</p>
+        </CardContent>
+         <CardFooter>
+            <Link href="/signin">
+                <Button>Go to Sign In</Button>
+            </Link>
+        </CardFooter>
+      </Card>
+    );
+  }
+
 
   return (
-    <Card className="max-w-2xl mx-auto shadow-xl">
+    <Card className="max-w-2xl mx-auto shadow-xl border-t-4 border-primary">
       <CardHeader>
         <CardTitle className="text-2xl">Edit Your SkillSwap Profile</CardTitle>
         <CardDescription>Keep your skills and bio up-to-date to find the best matches.</CardDescription>
@@ -158,6 +217,20 @@ export function EditProfileForm() {
             />
             <FormField
               control={form.control}
+              name="avatarUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Avatar URL (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://example.com/avatar.png" {...field} />
+                  </FormControl>
+                   <FormDescription>Link to your profile picture. Leave blank for default.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="bio"
               render={({ field }) => (
                 <FormItem>
@@ -171,14 +244,13 @@ export function EditProfileForm() {
               )}
             />
 
-            {/* Skills to Teach */}
             <FormField
               control={form.control}
               name="skillsToTeach"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Skills You Can Teach</FormLabel>
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="flex flex-wrap gap-2 mb-2 min-h-[2.5rem] p-2 border rounded-md bg-background items-center">
                     {field.value.map(skill => (
                       <Badge key={skill} variant="secondary" className="text-sm px-2 py-1 bg-green-100 text-green-700 border-green-300">
                         {skill}
@@ -187,6 +259,7 @@ export function EditProfileForm() {
                         </button>
                       </Badge>
                     ))}
+                     {field.value.length === 0 && <span className="text-sm text-muted-foreground">No skills added yet.</span>}
                   </div>
                   {field.value.length < 10 && (
                      <SkillSelector 
@@ -197,20 +270,19 @@ export function EditProfileForm() {
                         onSelectSkill={(skill) => handleAddSkill('teach', skill)}
                      />
                   )}
-                  <FormDescription>List up to 10 skills you're proficient in and willing to teach.</FormDescription>
+                  <FormDescription>List up to 10 skills you&apos;re proficient in and willing to teach.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Skills to Learn */}
             <FormField
               control={form.control}
               name="skillsToLearn"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Skills You Want to Learn</FormLabel>
-                   <div className="flex flex-wrap gap-2 mb-2">
+                   <div className="flex flex-wrap gap-2 mb-2 min-h-[2.5rem] p-2 border rounded-md bg-background items-center">
                     {field.value.map(skill => (
                       <Badge key={skill} variant="outline" className="text-sm px-2 py-1 bg-blue-100 text-blue-700 border-blue-300">
                         {skill}
@@ -219,6 +291,7 @@ export function EditProfileForm() {
                         </button>
                       </Badge>
                     ))}
+                    {field.value.length === 0 && <span className="text-sm text-muted-foreground">No skills added yet.</span>}
                   </div>
                   {field.value.length < 10 && (
                     <SkillSelector 
@@ -229,17 +302,17 @@ export function EditProfileForm() {
                         onSelectSkill={(skill) => handleAddSkill('learn', skill)}
                      />
                   )}
-                  <FormDescription>List up to 10 skills you're eager to learn from others.</FormDescription>
+                  <FormDescription>List up to 10 skills you&apos;re eager to learn from others.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={form.formState.isSubmitting} className="w-full md:w-auto">
-              {form.formState.isSubmitting ? (
+            <Button type="submit" disabled={isSubmitting || authLoading || !form.formState.isDirty} className="w-full md:w-auto">
+              {isSubmitting ? (
                 <>
-                  <Save className="mr-2 h-4 w-4 animate-pulse" /> Saving...
+                  <Loader2 className="mr-2 h-4 w-4 animate-pulse" /> Saving...
                 </>
               ) : (
                 <>
@@ -247,6 +320,7 @@ export function EditProfileForm() {
                 </>
               )}
             </Button>
+             {!form.formState.isDirty && !isSubmitting && <p className="ml-4 text-sm text-muted-foreground">No changes to save.</p>}
           </CardFooter>
         </form>
       </Form>

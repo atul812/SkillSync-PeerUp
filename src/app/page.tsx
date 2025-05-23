@@ -1,19 +1,50 @@
 
+"use client"; 
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Users, Lightbulb, Zap, Award } from "lucide-react";
+import { CheckCircle, Users, Lightbulb, Zap, Award, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext"; 
 
 export default function LandingPage() {
+  const { currentUserProfile, loading } = useAuth();
+
+  const getStartedLink = loading ? "#" : currentUserProfile ? "/dashboard" : "/signin";
+  
+  const GetStartedButtonContent = () => {
+    if (loading) {
+      return <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading...</>;
+    }
+    return currentUserProfile ? "Go to Dashboard" : "Get Started";
+  };
+  
+  const JoinButtonContent = () => {
+    if (loading) {
+      return <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Please wait...</>;
+    }
+    return <>Join SkillSwap Today <Zap className="ml-2 h-5 w-5" /></>;
+  };
+
+  const SignUpButtonContent = () => {
+     if (loading) {
+      return <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading...</>;
+    }
+    return "Sign Up & Start Swapping";
+  }
+
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="bg-primary text-primary-foreground py-6 shadow-md">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-3xl font-bold">SkillSwap</h1>
+          <Link href="/" className="text-3xl font-bold">SkillSwap</Link>
           <nav>
-            <Link href="/dashboard" passHref>
-              <Button variant="secondary">Get Started</Button>
+            <Link href={getStartedLink} passHref>
+              <Button variant="secondary" disabled={loading}>
+                <GetStartedButtonContent />
+              </Button>
             </Link>
           </nav>
         </div>
@@ -28,10 +59,9 @@ export default function LandingPage() {
             <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
               SkillSwap is a peer-to-peer learning platform where you can teach what you know and learn what you need, all within a supportive and gamified environment.
             </p>
-            <Link href="/dashboard" passHref>
-              <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                Join SkillSwap Today
-                <Zap className="ml-2 h-5 w-5" />
+            <Link href={getStartedLink} passHref>
+              <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={loading}>
+                <JoinButtonContent />
               </Button>
             </Link>
           </div>
@@ -92,9 +122,9 @@ export default function LandingPage() {
             <p className="text-lg mb-8 max-w-xl mx-auto text-secondary-foreground/80">
               Join a vibrant community of learners and teachers. It's free, fun, and fulfilling!
             </p>
-            <Link href="/dashboard" passHref>
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                Sign Up & Start Swapping
+            <Link href={getStartedLink} passHref>
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground" disabled={loading}>
+                <SignUpButtonContent />
               </Button>
             </Link>
              <div className="mt-12">
