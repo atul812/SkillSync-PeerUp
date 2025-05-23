@@ -11,24 +11,43 @@ import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext"; 
 import { getBotResponse, type ChatBotInput, type ChatBotOutput } from "@/ai/flows/chat-bot-flow";
 
-// Initial data for contacts
+// Expanded initial data for contacts
 const contactsInitialData = [
   { id: "user_jane_doe", name: "Jane Doe", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "Sure, I can help with that!", unread: 2, online: true },
   { id: "user_john_smith", name: "John Smith", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "Thanks for the session!", unread: 0, online: false },
+  { id: "user_sarah_miller", name: "Sarah Miller", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "Mostly web development with Flask or Django.", unread: 1, online: true },
+  { id: "user_david_lee", name: "David Lee", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "I'm focusing on scalability patterns right now.", unread: 0, online: false },
   { id: "user_ai_helper", name: "SkillSync & PeerUp AI Bot", avatarUrl: "https://placehold.co/40x40.png", lastMessage: "How can I assist you today?", unread: 0, online: true },
 ];
 
 // Initial messages are specific to the initially selected contact
 const initialMessagesForJane = [
-  { id: "msg1", sender: "Jane Doe", text: "Hey Alex! I saw you're looking to learn Data Structures. I can help with that.", time: "10:30 AM", self: false },
-  { id: "msg2", sender: "Alex Johnson (Mock User)", text: "Hi Jane! That would be amazing. I'm particularly struggling with graphs.", time: "10:32 AM", self: true }, 
-  { id: "msg3", sender: "Jane Doe", text: "No problem! Graphs can be tricky. When are you free for a quick session?", time: "10:33 AM", self: false },
+  { id: "msg1_jane", sender: "Jane Doe", text: "Hey Alex! I saw you're looking to learn Data Structures. I can help with that.", time: "10:30 AM", self: false },
+  { id: "msg2_jane", sender: "Alex Johnson (Mock User)", text: "Hi Jane! That would be amazing. I'm particularly struggling with graphs.", time: "10:32 AM", self: true }, 
+  { id: "msg3_jane", sender: "Jane Doe", text: "No problem! Graphs can be tricky. When are you free for a quick session?", time: "10:33 AM", self: false },
+];
+
+const initialMessagesForSarah = [
+  { id: "msg1_sarah", sender: "Sarah Miller", text: "Hi! I saw you're teaching Python. I'd love to learn!", time: "Yesterday 2:15 PM", self: false },
+  { id: "msg2_sarah", sender: "You", text: "Hey Sarah! Sure, I can help. What aspects of Python are you interested in?", time: "Yesterday 2:17 PM", self: true },
+  { id: "msg3_sarah", sender: "Sarah Miller", text: "Mostly web development with Flask or Django.", time: "Yesterday 2:20 PM", self: false },
+];
+
+const initialMessagesForDavid = [
+  { id: "msg1_david", sender: "David Lee", text: "Need help with System Design. Saw you're learning it too. Want to study together?", time: "Mon 9:00 AM", self: false },
+  { id: "msg2_david", sender: "You", text: "That's a great idea, David! I'm focusing on scalability patterns right now.", time: "Mon 9:05 AM", self: true },
 ];
 
 const initialMessagesMapData: Record<string, Array<{id: string; sender: string; text: string; time: string; self: boolean}>> = {
     [contactsInitialData[0].id]: initialMessagesForJane, 
-    [contactsInitialData[1].id]: [], 
-    [contactsInitialData[2].id]: [ { id: "bot-msg1", sender: "SkillSync & PeerUp AI Bot", text: "Hello! How can I help you match skills today?", time: "9:00 AM", self: false }],
+    [contactsInitialData[1].id]: [
+      { id: "msg1_john", sender: "John Smith", text: "Great session on React! Really helped.", time: "Tues 4:00 PM", self: false },
+      { id: "msg2_john", sender: "You", text: "Glad I could help, John! Let me know if you have more questions.", time: "Tues 4:02 PM", self: true },
+      { id: "msg3_john", sender: "John Smith", text: "Thanks for the session!", time: "Tues 4:03 PM", self: false },
+    ], 
+    [contactsInitialData[2].id]: initialMessagesForSarah,
+    [contactsInitialData[3].id]: initialMessagesForDavid,
+    [contactsInitialData[4].id]: [ { id: "bot-msg1", sender: "SkillSync & PeerUp AI Bot", text: "Hello! How can I help you match skills today?", time: "9:00 AM", self: false }],
 };
 
 
@@ -42,7 +61,14 @@ export default function ChatPage() {
 
   const currentMessages = allMessages[selectedContact.id] || [];
 
-  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    const names = name.split(' ');
+    if (names.length === 0 || !names[0]) return "U";
+    if (names.length === 1) return names[0][0].toUpperCase();
+    return (names[0][0].toUpperCase() + (names[names.length - 1]?.[0]?.toUpperCase() || "")).slice(0,2);
+  }
+
 
   const updateContactLastMessage = (contactId: string, lastMsgText: string, incrementUnread = false) => {
     setContactList(prevContacts => 
@@ -50,11 +76,13 @@ export default function ChatPage() {
         c.id === contactId ? { ...c, lastMessage: lastMsgText, unread: incrementUnread && c.id !== selectedContact?.id ? c.unread + 1 : c.unread } : c
       )
     );
-    if (selectedContact?.id === contactId) {
-      setSelectedContact(prevSelected => {
-        const updated = contactList.find(c => c.id === contactId); // find from the latest contactList
-        return updated ? { ...updated, lastMessage: lastMsgText } : prevSelected; 
-      });
+    // Ensure selectedContact also reflects the latest message if it's the one being updated.
+    // This is important if updateContactLastMessage is called for the selected contact.
+     if (selectedContact?.id === contactId) {
+        setSelectedContact(prevSelected => {
+            if (!prevSelected) return null; // Should not happen if a contact is selected
+            return { ...prevSelected, lastMessage: lastMsgText };
+        });
     }
   };
 
@@ -74,11 +102,16 @@ export default function ChatPage() {
         ...prevAllMessages,
         [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), messageToSend]
     }));
-
+    
+    // Update last message in contact list and for the selected contact view
     updateContactLastMessage(selectedContact.id, messageToSend.text);
+    
     const currentInput = newMessage.trim();
     setNewMessage("");
     
+    console.log("Sending message:", messageToSend, "to contact:", selectedContact.name);
+
+
     if (selectedContact.id === "user_ai_helper") {
       setIsBotTyping(true);
       try {
@@ -97,7 +130,7 @@ export default function ChatPage() {
           ...prevAllMessages,
           [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), botReply]
         }));
-        updateContactLastMessage(selectedContact.id, botReply.text, true);
+        updateContactLastMessage(selectedContact.id, botReply.text, true); // Increment unread for bot reply
 
       } catch (error) {
         console.error("Error getting AI response:", error);
@@ -112,7 +145,7 @@ export default function ChatPage() {
           ...prevAllMessages,
           [selectedContact.id]: [...(prevAllMessages[selectedContact.id] || []), errorReply]
         }));
-        updateContactLastMessage(selectedContact.id, errorReply.text, true);
+        updateContactLastMessage(selectedContact.id, errorReply.text, true); // Increment unread for error reply
       } finally {
         setIsBotTyping(false);
       }
@@ -219,9 +252,9 @@ export default function ChatPage() {
                       handleSendMessage();
                     }
                   }}
-                  disabled={!currentUserProfile || isBotTyping} 
+                  disabled={!currentUserProfile || (selectedContact.id === "user_ai_helper" && isBotTyping)} 
                 />
-                <Button onClick={handleSendMessage} disabled={!newMessage.trim() || !currentUserProfile || isBotTyping}>
+                <Button onClick={handleSendMessage} disabled={!newMessage.trim() || !currentUserProfile || (selectedContact.id === "user_ai_helper" && isBotTyping)}>
                   <Send className="h-5 w-5" /> Send
                 </Button>
               </div>
@@ -237,3 +270,5 @@ export default function ChatPage() {
     </div>
   );
 }
+
+    
