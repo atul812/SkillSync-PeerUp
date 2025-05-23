@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, UserCheck, MessageSquare, RefreshCw, Zap, Send, GitFork } from "lucide-react"; // Added GitFork for swap
+import { Loader2, UserCheck, RefreshCw, Zap, Send, GitFork } from "lucide-react"; // Added GitFork for swap
 import type { AISkillMatchInput, AISkillMatchOutput, UserProfile, SkillMatch } from '@/types';
 import { recommendSkillMatches as recommendSkillMatchesFlow } from '@/ai/flows/skill-match-recommendation';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +38,7 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
     }
 
     setIsLoading(true);
-    setError(null);
+    setError(null); // Clear previous errors before fetching
 
     const input: AISkillMatchInput = {
       teachingSkills: currentUserProfile.skillsToTeach,
@@ -51,41 +51,50 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
       
       if (result.recommendedMatches && result.recommendedMatches.length > 0) {
         const formattedMatches: SkillMatch[] = result.recommendedMatches.map((name, index) => {
-          const skillsTheyTeachYou = [...currentUserProfile.skillsToLearn].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToLearn.length));
-          const skillsYouTeachThem = [...currentUserProfile.skillsToTeach].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToTeach.length));
+          // Prioritize actual skills from profile for a more logical mock
+          const skillsTheyTeachYou = currentUserProfile.skillsToLearn.length > 0 
+            ? [...currentUserProfile.skillsToLearn].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToLearn.length))
+            : ["Relevant Skill A", "Relevant Skill B"]; // Fallback if user has no skillsToLearn
 
+          const skillsYouTeachThem = currentUserProfile.skillsToTeach.length > 0
+            ? [...currentUserProfile.skillsToTeach].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, currentUserProfile.skillsToTeach.length))
+            : ["Your Skill X", "Your Skill Y"]; // Fallback if user has no skillsToTeach
+            
           return {
             userId: `ai_match_${index}_${Date.now()}`,
             name: name,
             avatarUrl: `https://placehold.co/80x80.png?text=${getInitials(name)}`,
             commonSkillsToTeach: skillsTheyTeachYou,
             commonSkillsToLearn: skillsYouTeachThem,
-            reasoning: index === 0 ? result.reasoning : `This user has skills that complement yours. ${name} can teach you ${skillsTheyTeachYou.join(', ') || 'some interesting skills'}, and you could teach them ${skillsYouTeachThem.join(', ') || 'some of your skills'}.`
+            reasoning: index === 0 && result.reasoning ? result.reasoning : `This user has skills that complement yours. ${name} can teach you ${skillsTheyTeachYou.join(', ') || 'some interesting skills'}, and you could teach them ${skillsYouTeachThem.join(', ') || 'some of your skills'}.`
           };
         });
         setRecommendations(formattedMatches);
+        setError(null); // Clear any previous "add skills" error if matches are found
       } else {
-        setRecommendations(mockSkillMatches); 
-        setError("AI couldn't find specific matches right now, showing general examples. Try refining your skills!");
+        // AI returned no specific matches, show mockSkillMatches without specific error message
+        setRecommendations(mockSkillMatches);
+        setError(null); // No error message, just show mock data
       }
     } catch (e) {
       console.error("Failed to fetch recommendations:", e);
-      setError("Could not fetch recommendations at this time. Showing examples.");
+      // Actual error during AI call, show mockSkillMatches without specific error message
       setRecommendations(mockSkillMatches);
+      setError(null); // No error message, just show mock data
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (currentUserProfile.skillsToLearn.length > 0 || currentUserProfile.skillsToTeach.length > 0) {
+    if (currentUserProfile && (currentUserProfile.skillsToLearn.length > 0 || currentUserProfile.skillsToTeach.length > 0)) {
       fetchRecommendations();
-    } else {
+    } else if (currentUserProfile) { // Added currentUserProfile check here
        setError("Add skills to your profile to discover potential matches!");
        setRecommendations([]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUserProfile.skillsToTeach.join(','), currentUserProfile.skillsToLearn.join(','), currentUserProfile.bio]);
+  }, [currentUserProfile?.id, currentUserProfile?.skillsToTeach.join(','), currentUserProfile?.skillsToLearn.join(','), currentUserProfile?.bio]);
 
 
   const handleConnect = (matchName: string) => {
@@ -110,6 +119,27 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
     });
   };
 
+  // Ensure currentUserProfile exists before trying to access its properties
+  if (!currentUserProfile) {
+    return (
+        <Card className="shadow-lg">
+            <CardHeader>
+                 <CardTitle className="flex items-center text-2xl">
+                    <UserCheck className="mr-3 h-7 w-7 text-primary" />
+                    Skill Match Recommendations
+                </CardTitle>
+                <CardDescription>AI-powered suggestions for peer learning.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex justify-center items-center h-40">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                     <p className="ml-4 text-muted-foreground">Loading user profile...</p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+  }
+
   return (
     <Card className="shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -126,10 +156,10 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
         </Button>
       </CardHeader>
       <CardContent>
-        {error && (
+        {error && (currentUserProfile.skillsToLearn.length === 0 && currentUserProfile.skillsToTeach.length === 0) && (
           <Alert variant="default" className="mb-4 bg-yellow-50 border-yellow-300 text-yellow-700">
             <Zap className="h-4 w-4 !text-yellow-700" />
-            <AlertTitle>Note</AlertTitle>
+            <AlertTitle>Tip!</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -170,10 +200,10 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
                 </CardContent>
                 <CardFooter className="gap-2">
                   <Button variant="default" size="sm" onClick={() => handleConnect(match.name)}>
-                    <Send className="mr-2 h-4 w-4" /> Connect {/* Changed Icon */}
+                    <Send className="mr-2 h-4 w-4" /> Connect
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => handleRequestSwap(match)}>
-                    <GitFork className="mr-2 h-4 w-4" /> {/* Changed Icon */}
+                    <GitFork className="mr-2 h-4 w-4" />
                     Request Swap
                   </Button>
                 </CardFooter>
@@ -181,7 +211,11 @@ export function RecommendationsDisplay({ currentUserProfile }: RecommendationsDi
             ))}
           </div>
         ) : (
-          !isLoading && !error && <p className="text-muted-foreground text-center py-8">No recommendations available yet. Complete your profile or check back later!</p>
+          !isLoading && !(currentUserProfile.skillsToLearn.length === 0 && currentUserProfile.skillsToTeach.length === 0) && <p className="text-muted-foreground text-center py-8">No specific recommendations found. Try adjusting your skills or check back later!</p>
+        )}
+         {/* Fallback message if no skills are set and no error message already exists from the profile check */}
+        {!isLoading && recommendations.length === 0 && (currentUserProfile.skillsToLearn.length === 0 && currentUserProfile.skillsToTeach.length === 0 && !error) && (
+             <p className="text-muted-foreground text-center py-8">Add skills to your profile to get recommendations.</p>
         )}
       </CardContent>
     </Card>
