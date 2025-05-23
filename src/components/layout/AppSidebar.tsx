@@ -22,7 +22,7 @@ const navItems = [
   { href: "/matches", label: "Find Matches", icon: Search },
   { href: "/roadmap", label: "Learning Roadmap", icon: BookOpen },
   { href: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
-  { href: "/chat", label: "Messages", icon: MessageSquare, disabled: false }, // Changed disabled to false
+  { href: "/chat", label: "Messages", icon: MessageSquare, disabled: false }, // Ensuring this is false
 ];
 
 export function AppSidebar() {
