@@ -6,6 +6,8 @@ import { mockLearningRoadmap } from "@/lib/mock-data";
 import Link from "next/link";
 import { BookOpen, CheckSquare, Square, ExternalLink, PlusCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label"; // Added import
+import React from 'react'; // Keep React import for key prop
 
 export default function RoadmapPage() {
   const roadmap = mockLearningRoadmap;
@@ -75,6 +77,3 @@ export default function RoadmapPage() {
     </div>
   );
 }
-
-// Dummy React import for key prop
-import React from 'react';
