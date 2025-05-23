@@ -15,7 +15,7 @@ import {
 import { Flame, Coins, Menu, LogOut, UserCircle, Settings, BarChart3, Loader2 } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar"; 
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth if needed for signout, or pass as prop
-import { useState } } from "react"; // For signout loading state
+import { useState } from "react"; // For signout loading state
 
 interface AppHeaderProps {
   userName: string;
