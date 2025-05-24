@@ -13,7 +13,7 @@ import {
   SidebarContent,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Home, User, Search, BookOpen, BarChart3, Settings, MessageSquare, Zap } from "lucide-react";
+import { Home, User, Search, BookOpen, BarChart3, Settings, MessageSquare, Zap, Gem } from "lucide-react";
 import { Button } from "../ui/button";
 
 const navItems = [
@@ -22,7 +22,7 @@ const navItems = [
   { href: "/matches", label: "Find Matches", icon: Search },
   { href: "/roadmap", label: "Learning Roadmap", icon: BookOpen },
   { href: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
-  { href: "/chat", label: "Messages", icon: MessageSquare, disabled: false }, // Ensuring this is false
+  { href: "/chat", label: "Messages", icon: MessageSquare, disabled: false },
 ];
 
 export function AppSidebar() {
@@ -58,9 +58,11 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4 border-t">
-         <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-            <Zap className="mr-2 h-4 w-4" /> Boost Learning
-         </Button>
+         <Link href="/premium" passHref className="w-full">
+            <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                <Gem className="mr-2 h-4 w-4" /> Boost Learning
+            </Button>
+         </Link>
       </SidebarFooter>
     </Sidebar>
   );
