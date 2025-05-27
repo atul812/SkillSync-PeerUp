@@ -56,12 +56,13 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-grow">
+        {/* Hero Section */}
         <section className="py-16 md:py-24 bg-gradient-to-br from-primary/80 via-background to-background">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-primary-foreground drop-shadow-md">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground drop-shadow-md">
               Unlock Your Potential. Share Your Skills.
             </h2>
-            <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
+            <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-foreground/90">
               SkillSync & PeerUp is a peer-to-peer learning platform where you can teach what you know and learn what you need, all within a supportive and gamified environment.
             </p>
             <Link href={getStartedLink} passHref>
@@ -72,6 +73,7 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Why SkillSync & PeerUp Section */}
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
             <h3 className="text-3xl font-bold text-center mb-12 text-foreground">
@@ -121,6 +123,7 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Call to Action Section */}
         <section className="py-16 md:py-24 bg-secondary">
           <div className="container mx-auto px-4 text-center">
             <h3 className="text-3xl font-bold mb-6 text-secondary-foreground">Ready to Level Up Your Skills?</h3>
@@ -146,6 +149,7 @@ export default function LandingPage() {
         </section>
       </main>
 
+      {/* Footer Section */}
       <footer className="bg-foreground text-background py-8 text-center">
         <div className="container mx-auto px-4">
           <p>&copy; {new Date().getFullYear()} SkillSync & PeerUp. All rights reserved.</p>
