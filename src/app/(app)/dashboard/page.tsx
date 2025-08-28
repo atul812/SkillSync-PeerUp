@@ -5,6 +5,7 @@ import { SkillOverviewCard } from "@/components/dashboard/SkillOverviewCard";
 import { GamificationWidget } from "@/components/dashboard/GamificationWidget";
 import { RecommendationsDisplay } from "@/components/dashboard/RecommendationsDisplay";
 import { LearningRoadmapPreview } from "@/components/dashboard/LearningRoadmapPreview";
+import { IllustratedFeatures } from "@/components/dashboard/IllustratedFeatures";
 import { mockLearningRoadmap, mockLeaderboard } from "@/lib/mock-data"; // Keep mockLeaderboard for rank calculation
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,22 @@ import { Zap, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 import { useEffect, useState } from "react";
 import type { UserProfile as UserProfileType } from "@/types"; // Import UserProfile type
+
+// Helper function to convert string arrays to Skill objects
+interface Skill {
+  id: string;
+  name: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+}
+
+const convertToSkillObjects = (skillStrings: string[]): Skill[] => {
+  return skillStrings.map((skill, index) => ({
+    id: `skill-${index}`,
+    name: skill,
+    // Randomly assign a level for demonstration purposes
+    level: ['beginner', 'intermediate', 'advanced'][Math.floor(Math.random() * 3)] as 'beginner' | 'intermediate' | 'advanced'
+  }));
+}
 
 export default function DashboardPage() {
   const { currentUserProfile, loading: authLoading } = useAuth();
@@ -64,8 +81,8 @@ export default function DashboardPage() {
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         <SkillOverviewCard 
-          skillsToTeach={userProfile.skillsToTeach}
-          skillsToLearn={userProfile.skillsToLearn}
+          skillsToTeach={convertToSkillObjects(userProfile.skillsToTeach)}
+          skillsToLearn={convertToSkillObjects(userProfile.skillsToLearn)}
         />
         <GamificationWidget 
           tokens={userProfile.tokens}
@@ -74,6 +91,20 @@ export default function DashboardPage() {
         />
         <LearningRoadmapPreview roadmap={learningRoadmap} />
       </div>
+
+      <Card className="shadow-lg border-t-2 border-t-primary/30">
+        <CardHeader>
+          <CardTitle className="text-2xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+            Explore SkillSync Features
+          </CardTitle>
+          <CardDescription>
+            Discover all the ways SkillSync can help you connect, learn, and grow
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <IllustratedFeatures />
+        </CardContent>
+      </Card>
 
       <div>
         {/* RecommendationsDisplay already expects currentUserProfile from props and handles its own loading/state */}

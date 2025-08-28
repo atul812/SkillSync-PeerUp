@@ -5,98 +5,98 @@
 
 @layer base {
   :root {
-    /* Dark Slate Blue/Grey, Gold, Red Theme */
-    --background: 220 10% 20%; /* Dark Slate Blue/Grey */
-    --foreground: 0 0% 90%; /* Light Grey/Off-white for text */
+    /* Modern Vibrant Theme for College Students */
+    --background: 230 25% 18%; /* Deep blue-gray background */
+    --foreground: 0 0% 95%; /* Almost white text for better readability */
 
-    --card: 220 10% 15%; /* Slightly darker Slate for cards */
-    --card-foreground: 0 0% 90%; /* Light Grey/Off-white for card text */
+    --card: 230 30% 22%; /* Slightly lighter blue-gray for cards */
+    --card-foreground: 0 0% 95%; /* Almost white text for cards */
 
-    --popover: 220 10% 12%; /* Even darker Slate for popovers */
-    --popover-foreground: 0 0% 90%; /* Light Grey/Off-white for popover text */
+    --popover: 230 35% 15%; /* Darker blue-gray for popovers */
+    --popover-foreground: 0 0% 95%; /* Almost white text for popovers */
 
-    --primary: 45 100% 50%; /* Vibrant Gold */
-    --primary-foreground: 30 50% 15%; /* Dark Brown/Black for text on gold */
+    --primary: 262 83% 58%; /* Vibrant purple - modern and energetic */
+    --primary-foreground: 0 0% 100%; /* White text on purple */
 
-    --secondary: 0 70% 45%; /* Deep Red */
-    --secondary-foreground: 0 0% 100%; /* White text on red */
+    --secondary: 190 95% 45%; /* Bright teal - complementary to purple */
+    --secondary-foreground: 0 0% 100%; /* White text on teal */
 
-    --muted: 220 10% 35%; /* Muted Slate for less emphasis */
-    --muted-foreground: 220 10% 70%; /* Lighter muted text */
+    --muted: 230 25% 30%; /* Muted blue-gray for less emphasis */
+    --muted-foreground: 230 15% 80%; /* Light gray-blue for muted text */
 
-    --accent: 0 85% 55%; /* Bright Red for accents (can be same as secondary or distinct) */
-    --accent-foreground: 0 0% 100%; /* White text on bright red */
+    --accent: 330 95% 60%; /* Vibrant pink for accents - energetic and youthful */
+    --accent-foreground: 0 0% 100%; /* White text on pink */
 
-    --destructive: 0 100% 50%; /* Standard Red for destructive actions */
+    --destructive: 0 100% 50%; /* Standard red for destructive actions */
     --destructive-foreground: 0 0% 100%; /* White text on destructive red */
 
-    --border: 220 10% 30%; /* Slate border */
-    --input: 220 10% 30%; /* Slate input border */
-    --ring: 45 100% 55%; /* Brighter Gold for focus rings */
+    --border: 230 25% 30%; /* Blue-gray border */
+    --input: 230 25% 30%; /* Blue-gray input border */
+    --ring: 262 83% 58%; /* Purple for focus rings */
     
-    --chart-1: 45 100% 50%; /* Gold */
-    --chart-2: 0 80% 50%;   /* Red */
-    --chart-3: 40 80% 60%;   /* Lighter Gold */
-    --chart-4: 0 70% 40%;   /* Darker Red */
-    --chart-5: 50 70% 55%;   /* Orange-Gold */
+    --chart-1: 262 83% 58%; /* Purple */
+    --chart-2: 190 95% 45%; /* Teal */
+    --chart-3: 330 95% 60%; /* Pink */
+    --chart-4: 150 80% 45%; /* Green */
+    --chart-5: 40 95% 55%;  /* Orange */
 
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* Slightly larger radius for modern feel */
 
-    /* Sidebar specific theme variables - consistent with main dark theme */
-    --sidebar-background: 220 10% 17%; /* Darker Slate for sidebar */
-    --sidebar-foreground: 0 0% 85%; /* Light text for sidebar */
-    --sidebar-primary: 45 100% 50%; /* Gold */
-    --sidebar-primary-foreground: 30 50% 15%; /* Dark Brown text on gold */
-    --sidebar-accent: 0 80% 50%; /* Red */
-    --sidebar-accent-foreground: 0 0% 100%; /* White text on red */
-    --sidebar-border: 220 10% 25%; /* Slightly darker slate border for sidebar */
-    --sidebar-ring: 45 100% 55%; /* Gold for focus rings in sidebar */
+    /* Sidebar specific theme variables */
+    --sidebar-background: 230 35% 15%; /* Darker blue-gray for sidebar */
+    --sidebar-foreground: 0 0% 95%; /* Almost white text for sidebar */
+    --sidebar-primary: 262 83% 58%; /* Purple */
+    --sidebar-primary-foreground: 0 0% 100%; /* White text on purple */
+    --sidebar-accent: 330 95% 60%; /* Pink */
+    --sidebar-accent-foreground: 0 0% 100%; /* White text on pink */
+    --sidebar-border: 230 30% 25%; /* Slightly darker blue-gray border for sidebar */
+    --sidebar-ring: 262 83% 58%; /* Purple for focus rings in sidebar */
   }
 
   .dark {
-    /* Keeping .dark consistent with the new default, can be differentiated later if needed */
-    --background: 220 10% 20%; 
-    --foreground: 0 0% 90%; 
+    /* Darker version of our modern theme for dark mode */
+    --background: 230 30% 10%; /* Darker blue-gray background */
+    --foreground: 0 0% 95%; /* Almost white text for better readability */
 
-    --card: 220 10% 15%; 
-    --card-foreground: 0 0% 90%; 
+    --card: 230 35% 15%; /* Slightly lighter blue-gray for cards */
+    --card-foreground: 0 0% 95%; /* Almost white text for cards */
 
-    --popover: 220 10% 12%; 
-    --popover-foreground: 0 0% 90%; 
+    --popover: 230 40% 8%; /* Even darker blue-gray for popovers */
+    --popover-foreground: 0 0% 95%; /* Almost white text for popovers */
 
-    --primary: 45 100% 50%; 
-    --primary-foreground: 30 50% 15%; 
+    --primary: 262 83% 50%; /* Slightly darker purple for dark mode */
+    --primary-foreground: 0 0% 100%; /* White text on purple */
 
-    --secondary: 0 70% 45%; 
-    --secondary-foreground: 0 0% 100%; 
+    --secondary: 190 95% 40%; /* Slightly darker teal for dark mode */
+    --secondary-foreground: 0 0% 100%; /* White text on teal */
 
-    --muted: 220 10% 35%; 
-    --muted-foreground: 220 10% 70%; 
+    --muted: 230 30% 25%; /* Muted blue-gray for less emphasis */
+    --muted-foreground: 230 15% 75%; /* Light gray-blue for muted text */
 
-    --accent: 0 85% 55%; 
-    --accent-foreground: 0 0% 100%; 
+    --accent: 330 95% 55%; /* Slightly darker pink for dark mode */
+    --accent-foreground: 0 0% 100%; /* White text on pink */
 
-    --destructive: 0 100% 50%; 
-    --destructive-foreground: 0 0% 100%; 
+    --destructive: 0 100% 45%; /* Slightly darker red for dark mode */
+    --destructive-foreground: 0 0% 100%; /* White text on destructive red */
 
-    --border: 220 10% 30%; 
-    --input: 220 10% 30%; 
-    --ring: 45 100% 55%; 
+    --border: 230 30% 20%; /* Darker blue-gray border */
+    --input: 230 30% 20%; /* Darker blue-gray input border */
+    --ring: 262 83% 50%; /* Darker purple for focus rings */
     
-    --chart-1: 45 100% 50%;
-    --chart-2: 0 80% 50%;
-    --chart-3: 40 80% 60%;
-    --chart-4: 0 70% 40%;
-    --chart-5: 50 70% 55%;
+    --chart-1: 262 83% 50%; /* Purple */
+    --chart-2: 190 95% 40%; /* Teal */
+    --chart-3: 330 95% 55%; /* Pink */
+    --chart-4: 150 80% 40%; /* Green */
+    --chart-5: 40 95% 50%;  /* Orange */
 
-    --sidebar-background: 220 10% 17%; 
-    --sidebar-foreground: 0 0% 85%;
-    --sidebar-primary: 45 100% 50%;
-    --sidebar-primary-foreground: 30 50% 15%;
-    --sidebar-accent: 0 80% 50%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 10% 25%;
-    --sidebar-ring: 45 100% 55%;
+    --sidebar-background: 230 40% 8%; /* Darker blue-gray for sidebar */
+    --sidebar-foreground: 0 0% 95%; /* Almost white text for sidebar */
+    --sidebar-primary: 262 83% 50%; /* Purple */
+    --sidebar-primary-foreground: 0 0% 100%; /* White text on purple */
+    --sidebar-accent: 330 95% 55%; /* Pink */
+    --sidebar-accent-foreground: 0 0% 100%; /* White text on pink */
+    --sidebar-border: 230 35% 15%; /* Darker blue-gray border for sidebar */
+    --sidebar-ring: 262 83% 50%; /* Purple for focus rings in sidebar */
   }
 }
 
@@ -107,5 +107,79 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer utilities {
+  .keyframes {
+    animation-duration: 0.2s;
+    animation-timing-function: ease-out;
+  }
+  
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+  
+  @keyframes fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes fade-out {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  
+  @keyframes slide-in-right {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(0); }
+  }
+  
+  @keyframes slide-in-left {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(0); }
+  }
+  
+  @keyframes slide-in-top {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(0); }
+  }
+  
+  @keyframes slide-in-bottom {
+    0% { transform: translateY(100%); }
+    100% { transform: translateY(0); }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .animate-accordion-down { animation: accordion-down 0.2s ease-out; }
+  .animate-accordion-up { animation: accordion-up 0.2s ease-out; }
+  .animate-fade-in { animation: fade-in 0.3s ease-in-out; }
+  .animate-fade-out { animation: fade-out 0.3s ease-in-out; }
+  .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+  .animate-slide-in-left { animation: slide-in-left 0.3s ease-out; }
+  .animate-slide-in-top { animation: slide-in-top 0.3s ease-out; }
+  .animate-slide-in-bottom { animation: slide-in-bottom 0.3s ease-out; }
+  .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  .animate-bounce { animation: bounce 1s ease-in-out infinite; }
+  .animate-spin { animation: spin 1s linear infinite; }
 }
 
