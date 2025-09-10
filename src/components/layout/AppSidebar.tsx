@@ -37,7 +37,7 @@ export function AppSidebar() {
           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center group-hover:shadow-md transition-all duration-300">
             <span className="text-white font-bold text-sm">S</span>
           </div>
-          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">SkillSync</span>
+          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">SahaAcharya</span>
         </Link>
       </SidebarHeader>
       

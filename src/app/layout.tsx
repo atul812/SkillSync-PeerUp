@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SkillSync & PeerUp - Peer-to-Peer Learning Platform',
-  description: 'Teach skills you know, learn skills you need. Connect, learn, and grow with SkillSync & PeerUp.',
+  title: 'SahaAcharya - Peer-to-Peer Learning Platform',
+  description: 'Teach skills you know, learn skills you need. Connect, learn, and grow with SahaAcharya.',
 };
 
 export default function RootLayout({

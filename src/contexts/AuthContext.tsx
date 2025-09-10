@@ -6,11 +6,11 @@ import type { UserProfile, Badge, Endorsement } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
-const LOCAL_STORAGE_USER_KEY = 'skillSyncPeerUpUserProfile'; // Updated key
+const LOCAL_STORAGE_USER_KEY = 'sahaAcharyaUserProfile'; // Updated key
 
 // Mock data for new users
 const mockBadges: Badge[] = [
-  { id: "badge1", name: "Welcome Aboard!", iconName: "Ship", description: "Joined SkillSync & PeerUp.", dateEarned: new Date().toISOString().split('T')[0] },
+  { id: "badge1", name: "Welcome Aboard!", iconName: "Ship", description: "Joined SahaAcharya.", dateEarned: new Date().toISOString().split('T')[0] },
   { id: "badge2", name: "Profile Pioneer", iconName: "UserCheck", description: "Completed your first profile update.", dateEarned: new Date().toISOString().split('T')[0] },
 ];
 

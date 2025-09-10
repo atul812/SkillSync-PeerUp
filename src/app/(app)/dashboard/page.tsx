@@ -95,10 +95,10 @@ export default function DashboardPage() {
       <Card className="shadow-lg border-t-2 border-t-primary/30">
         <CardHeader>
           <CardTitle className="text-2xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-            Explore SkillSync Features
+            Explore SahaAcharya Features
           </CardTitle>
           <CardDescription>
-            Discover all the ways SkillSync can help you connect, learn, and grow
+            Discover all the ways SahaAcharya can help you connect, learn, and grow
           </CardDescription>
         </CardHeader>
         <CardContent>

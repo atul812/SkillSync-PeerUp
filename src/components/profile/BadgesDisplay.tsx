@@ -40,7 +40,7 @@ export function BadgesDisplay({ badges }: BadgesDisplayProps) {
           <Trophy className="mr-3 h-7 w-7 text-yellow-500" />
           My Badges & Achievements
         </CardTitle>
-        <CardDescription>Showcasing your milestones on SkillSync & PeerUp.</CardDescription>
+        <CardDescription>Showcasing your milestones on SahaAcharya.</CardDescription>
       </CardHeader>
       <CardContent>
         <TooltipProvider>

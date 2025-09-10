@@ -32,7 +32,7 @@ export default function LeaderboardPage() {
     <div className="container mx-auto py-8 space-y-6">
       <div className="text-center">
         <Trophy className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
-        <h1 className="text-4xl font-bold">SkillSync & PeerUp Champions</h1>
+        <h1 className="text-4xl font-bold">SahaAcharya Champions</h1>
         <p className="text-muted-foreground text-lg mt-2">
           See who's leading the pack in skill sharing and learning!
         </p>

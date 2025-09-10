@@ -31,7 +31,7 @@ export default function PremiumPage() {
     <div className="container mx-auto py-8 space-y-10">
       <div className="text-center">
         <Gem className="h-16 w-16 text-primary mx-auto mb-4" />
-        <h1 className="text-4xl font-bold text-foreground">Unlock SkillSync & PeerUp Premium</h1>
+        <h1 className="text-4xl font-bold text-foreground">Unlock SahaAcharya Premium</h1>
         <p className="text-muted-foreground text-lg mt-2 max-w-2xl mx-auto">
           Supercharge your learning and teaching journey with our exclusive premium features.
         </p>
@@ -56,7 +56,7 @@ export default function PremiumPage() {
         <PremiumFeatureCard
           icon={<Share2 className="h-12 w-12 text-accent" />}
           title="Exclusive Referral Program"
-          description="Refer friends to SkillSync & PeerUp Premium and earn rewards, tokens, and bonus features."
+          description="Refer friends to SahaAcharya Premium and earn rewards, tokens, and bonus features."
         />
         <PremiumFeatureCard
           icon={<ClipboardCheck className="h-12 w-12 text-accent" />}

@@ -101,7 +101,7 @@ export function EditProfileForm() {
 
       toast({
         title: "Profile Updated",
-        description: "Your SkillSync & PeerUp profile has been successfully updated (locally).",
+        description: "Your profile has been successfully updated (locally).",
         variant: "default",
       });
       form.reset(updatedProfileData); // Reset form with new data to clear dirty state
@@ -183,7 +183,7 @@ export function EditProfileForm() {
   return (
     <Card className="max-w-2xl mx-auto shadow-xl border-t-4 border-primary">
       <CardHeader>
-        <CardTitle className="text-2xl">Edit Your SkillSync & PeerUp Profile</CardTitle>
+        <CardTitle className="text-2xl">Edit Your Profile</CardTitle>
         <CardDescription>Keep your skills and bio up-to-date to find the best matches. (Changes saved locally)</CardDescription>
       </CardHeader>
       <Form {...form}>

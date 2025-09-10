@@ -24,7 +24,7 @@ export default function LandingPage() {
     if (loading) {
       return <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Please wait...</>;
     }
-    return <>Join SkillSync & PeerUp <Zap className="ml-2 h-5 w-5" /></>;
+    return <>Join SahaAcharya <Zap className="ml-2 h-5 w-5" /></>;
   };
 
   const SignUpButtonContent = () => {
@@ -43,7 +43,7 @@ export default function LandingPage() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-10 w-10 text-primary mr-2 group-hover:animate-pulse transition-all duration-300">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2.5-8.5L12 14l2.5-2.5L17 14l-5-5-5 5z"/>
             </svg>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent font-extrabold">SkillSync & PeerUp</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent font-extrabold">SahaAcharya</span>
           </Link>
           <nav className="flex items-center space-x-4">
             <Link href="#features" className="text-foreground/80 hover:text-primary transition-colors duration-200 hidden md:block">Features</Link>
@@ -74,7 +74,7 @@ export default function LandingPage() {
                   <span className="text-foreground">Share Your Skills.</span>
                 </h1>
                 <p className="text-xl mb-8 text-foreground/80 max-w-xl">
-                  SkillSync & PeerUp is a peer-to-peer learning platform where you can teach what you know and learn what you need, all within a supportive and gamified environment.
+                  SahaAcharya is a peer-to-peer learning platform where you can teach what you know and learn what you need, all within a supportive and gamified environment.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link href={getStartedLink} passHref>
@@ -128,7 +128,7 @@ export default function LandingPage() {
             <div className="text-center max-w-3xl mx-auto mb-16">
               <div className="inline-block bg-primary/10 text-primary font-medium rounded-full px-4 py-1.5 mb-4">Features</div>
               <h2 className="text-4xl md:text-5xl font-extrabold mb-6">
-                Why Students <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Love</span> SkillSync & PeerUp
+                Why Students <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Love</span> SahaAcharya
               </h2>
               <p className="text-xl text-foreground/70">
                 Our platform is designed specifically for college students who want to maximize their learning potential through collaboration.
@@ -262,7 +262,7 @@ export default function LandingPage() {
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent mr-2 flex items-center justify-center">
                   <span className="text-white font-bold text-sm">S&P</span>
                 </div>
-                <h3 className="font-bold text-lg">SkillSync & PeerUp</h3>
+                <h3 className="font-bold text-lg">SahaAcharya</h3>
               </div>
               <p className="text-sm text-foreground/70 mb-4">
                 The ultimate peer-to-peer learning platform for college students.
@@ -313,7 +313,7 @@ export default function LandingPage() {
           
           <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-foreground/60 mb-4 md:mb-0">
-              © {new Date().getFullYear()} SkillSync & PeerUp. All rights reserved.
+              © {new Date().getFullYear()} SahaAcharya. All rights reserved.
             </p>
             <div className="flex items-center">
               <p className="text-xs text-foreground/60 mr-2">Made with 💜 for college students</p>
